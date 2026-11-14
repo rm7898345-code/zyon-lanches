@@ -176,8 +176,9 @@
     <div class="valor" id="pgValor">R$ 0.00</div>
     <div class="resumo" id="pgResumo"></div>
     <div class="pixbox">
-      <div class="titulo">✨ PIX — Copia e Cola (via SyncPay)</div>
+      <div class="titulo">✨ PIX — Pague escaneando ou copiando</div>
       <div id="pgStatus" style="font-size:.85rem; margin-bottom:10px"></div>
+      <img id="pgQR" alt="QR Code Pix" style="display:none; width:230px; height:230px; background:#fff; border-radius:10px; padding:6px">
       <div class="chave" id="pgChave">—</div>
       <div class="copiacola" id="pgCopiaCola">—</div>
       <button class="botao-copiar" onclick="copiarPix()">📋 Copiar código Pix</button>
@@ -472,6 +473,7 @@
 
       document.getElementById('pgChave').textContent = 'Pix Copia e Cola — SyncPay';
       document.getElementById('pgCopiaCola').textContent = d.pix_code;
+      atualizarQR(d.pix_code);
       document.getElementById('pgStatus').textContent = '✅ Pix gerado! A confirmação é AUTOMÁTICA quando o pagamento for aprovado.';
       document.getElementById('pgConfirmarManual').style.display = 'none';
       document.getElementById('pgManualInfo').style.display = 'none';
@@ -484,6 +486,7 @@
       document.getElementById('pgStatus').textContent = '⚠ Pagamento automático indisponível (' + e.message + '). Use o Pix manual abaixo.';
       document.getElementById('pgChave').textContent = config.chavePix ? 'Chave: ' + config.chavePix : '⚠ Admin não configurou o pagamento!';
       document.getElementById('pgCopiaCola').textContent = config.chavePix ? gerarPixManual(config.chavePix, config.nomePix || 'ZYON', config.cidadePix || 'SAO PAULO', pedidoAtual.total, pedidoAtual.id) : '';
+      atualizarQR(document.getElementById('pgCopiaCola').textContent || '');
       document.getElementById('pgConfirmarManual').style.display = 'block';
     }
   }
@@ -537,6 +540,14 @@
     document.getElementById('agItens').innerHTML = '<b>Itens:</b> ' +
       pedidoAtual.itens.map(function(i){ return esc(i.nome) + ' × ' + i.qtd; }).join(', ') +
       (automatico ? '<div style="color:#4caf50; margin-top:6px">✅ Pagamento aprovado automaticamente pela SyncPay</div>' : '');
+  }
+
+  function atualizarQR(codigoPix) {
+    var img = document.getElementById('pgQR');
+    if (!codigoPix) { img.style.display = 'none'; return; }
+    /* gera a imagem do QR Code a partir do payload Pix (copia e cola) */
+    img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=230x230&margin=0&data=' + encodeURIComponent(codigoPix);
+    img.style.display = 'block';
   }
 
   /* Fallback manual (se o gateway falhar ou não estiver configurado) */
