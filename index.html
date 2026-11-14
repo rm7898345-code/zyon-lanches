@@ -101,6 +101,8 @@
     .card .foto { height:130px; }
     .pagamento, .aguardando, .prontotela { padding:22px 16px; }
 
+    /* no mobile o carrinho fica oculto: abre em tela cheia pelo botão flutuante */
+    #divCarrinho { display:none !important; border-radius:0; }
     /* carrinho em tela cheia (mobile) */
     #divCarrinho.sheet-aberto {
       display:block !important; position:fixed; inset:0; z-index:1000;
