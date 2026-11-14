@@ -290,7 +290,7 @@
         '<td>' + esc(p.id) + (p.syncIdentifier ? '<div class="tempo" title="Identifier SyncPay">🔄 ' + esc(p.syncIdentifier) + '</div>' : '') + '<div class="tempo">' + esc(p.criadoEm || '') + '</div></td>' +
         '<td><b>' + esc(p.cliente) + '</b></td>' +
         '<td>' + esc(p.endereco) + '</td>' +
-        '<td>' + esc(p.tipo) + '</td>' +
+        '<td>' + (p.tipo ? esc(p.tipo) + (p.consumo ? '<div class="tempo">' + esc(p.consumo) + '</div>' : '') : (p.status === 'pronto' ? '<div class="tempo" style="color:#ffb400">⏳ cliente vai escolher</div>' : '—')) + '</td>' +
         '<td>' + itensTxt + '</td>' +
         '<td><b style="color:#4caf50">R$ ' + p.total.toFixed(2) + '</b></td>' +
         '<td><span class="badge ' + p.status + '">' + p.status.replace('_',' ').toUpperCase() + '</span>' +
