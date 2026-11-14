@@ -57,7 +57,10 @@
   .carrinho button.finalizar { width:100%; margin-top:16px; background:#4caf50; color:#fff; border:none; padding:14px; border-radius:8px; font-size:1.05rem; font-weight:700; cursor:pointer; }
   .carrinho button.finalizar:disabled { background:#444; cursor:not-allowed; }
   .carrinho .limpar { width:100%; margin-top:8px; background:none; border:none; color:#ff6b6b; cursor:pointer; font-size:.85rem; }
-  .carrinho .linha button.step { background:#2c2c3a; color:#ffb400; border:none; width:26px; height:26px; border-radius:8px; font-weight:800; cursor:pointer; font-size:1rem; }
+  .carrinho .linha { display:flex; align-items:center; gap:8px; }
+  .carrinho .linha img { width:34px; height:34px; object-fit:cover; border-radius:8px; background:#2c2c3a; flex-shrink:0; }
+  .carrinho .linha .lnome { flex:1; min-width:0; font-size:.88rem; }
+  .carrinho .linha button.step { background:#2c2c3a; color:#ffb400; border:none; width:26px; height:26px; border-radius:8px; font-weight:800; cursor:pointer; font-size:1rem; flex-shrink:0; }
   .carrinho .linha.desconto span:last-child { color:#4caf50; font-weight:800; }
   .cupom-row { display:flex; gap:8px; margin-top:14px; }
   .cupom-row input { flex:1; padding:10px; border-radius:8px; border:1px solid #333; background:#12121a; color:#fff; text-transform:uppercase; letter-spacing:1px; }
@@ -67,13 +70,13 @@
   .cupom-aplicado button { background:none; border:none; color:#ff6b6b; cursor:pointer; font-size:.8rem; }
   .sugestoes { margin-top:16px; padding-top:14px; border-top:1px dashed #2c2c3a; }
   .sugestoes .titulo-sug { color:#ffb400; font-size:.85rem; font-weight:800; margin-bottom:8px; }
-  .sug-grid { display:grid; grid-template-columns:1fr; gap:10px; }
-  .sug-card { background:#12121a; border:1px solid #2c2c3a; border-radius:12px; padding:10px; display:flex; align-items:center; gap:12px; }
-  .sug-card img { width:64px; height:64px; object-fit:cover; border-radius:10px; background:#2c2c3a; flex-shrink:0; }
-  .sug-card .info { flex:1; min-width:0; }
-  .sug-card .info b { font-size:.95rem; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .sug-card .info span { color:#4caf50; font-size:.85rem; font-weight:700; }
-  .sug-card button { background:linear-gradient(90deg,#ff5f00,#ffb400); color:#fff; border:none; width:38px; height:38px; border-radius:50%; font-weight:800; cursor:pointer; flex-shrink:0; font-size:1.2rem; }
+  .sug-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
+  .sug-card { background:#12121a; border:1px solid #2c2c3a; border-radius:10px; padding:6px; display:flex; align-items:center; gap:6px; }
+  .sug-card img { width:38px; height:38px; object-fit:cover; border-radius:8px; background:#2c2c3a; flex-shrink:0; }
+  .sug-card .info { flex:1; min-width:0; display:none; }
+  .sug-card .info b { font-size:.7rem; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .sug-card .info span { color:#4caf50; font-size:.65rem; font-weight:700; }
+  .sug-card button { background:linear-gradient(90deg,#ff5f00,#ffb400); color:#fff; border:none; width:26px; height:26px; border-radius:50%; font-weight:800; cursor:pointer; flex-shrink:0; font-size:.9rem; }
   .economia { text-align:center; color:#4caf50; font-size:.85rem; font-weight:700; margin-top:8px; }
 
   /* ====== Carrinho flutuante (estilo app de delivery) ====== */
@@ -96,7 +99,6 @@
     .grid { grid-template-columns:repeat(2, 1fr); gap:10px; }
     .card .foto { height:130px; }
     .pagamento, .aguardando, .prontotela { padding:22px 16px; }
-    .sug-grid { grid-template-columns:1fr; }
 
     /* carrinho vira bottom sheet */
     #divCarrinho.sheet-aberto {
@@ -474,21 +476,50 @@
   }
 
   /* ---------- Sugestões inteligentes ---------- */
-  var ORDEM_SUGESTAO = ['Combos', 'Acompanhamentos', 'Sobremesas', 'Lanches'];
+  function sortear(arr) {
+    /* embaralha para as sugestões variarem a cada vez */
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+
+  function categoriasNoCarrinho() {
+    var cats = {};
+    for (var id in carrinho) {
+      var it = cardapio.find(function(i){ return i.id === id; });
+      if (it) cats[it.categoria || 'Lanches'] = true;
+    }
+    return cats;
+  }
 
   function renderizarSugestoes() {
     var div = document.getElementById('sugestoes');
     var idsNoCarrinho = Object.keys(carrinho);
     if (idsNoCarrinho.length === 0) { div.innerHTML = ''; return; }
 
-    /* Sugere itens de categorias que complementam o pedido, fora do carrinho */
+    /* Lógica inteligente conforme o que já está no carrinho:
+       - Só lanches            -> oferece complementos (acompanhamentos) e sobremesas
+       - Já tem combo          -> oferece apenas sobremesas
+       - Já tem acompanhamento -> pula para sobremesas (não insiste)
+       - Já tem sobremesa      -> tenta completar com o que falta (combo/acompanhamento) */
+    var cats = categoriasNoCarrinho();
+    var prioridade = [];
+    if (cats['Sobremesas'] && !cats['Combos']) prioridade.push('Combos');
+    if (cats['Sobremesas'] && !cats['Acompanhamentos']) prioridade.push('Acompanhamentos');
+    if (!cats['Combos'] && !cats['Acompanhamentos']) prioridade.push('Acompanhamentos');
+    if (!cats['Sobremesas']) prioridade.push('Sobremesas');
+    if (prioridade.length === 0) { div.innerHTML = ''; return; }
+
+    /* Sugere itens das categorias em falta, fora do carrinho, sorteados */
     var candidatas = [];
-    ORDEM_SUGESTAO.forEach(function(cat) {
-      cardapio.forEach(function(item) {
-        if ((item.categoria || 'Lanches') === cat && item.estoque > 0 && idsNoCarrinho.indexOf(item.id) < 0) {
-          candidatas.push(item);
-        }
-      });
+    prioridade.forEach(function(cat) {
+      var daCat = sortear(cardapio.filter(function(item) {
+        return (item.categoria || 'Lanches') === cat && item.estoque > 0 && idsNoCarrinho.indexOf(item.id) < 0;
+      }));
+      candidatas = candidatas.concat(daCat);
     });
     var sug = candidatas.slice(0, 3);
     if (sug.length === 0) { div.innerHTML = ''; return; }
@@ -498,7 +529,7 @@
       html += '<div class="sug-card">' +
         '<img src="' + fotoSegura(item.foto) + '" alt="" onerror="this.style.visibility=\'hidden\'">' +
         '<div class="info"><b>' + esc(item.nome) + '</b><span>R$ ' + item.preco_real.toFixed(2) + '</span></div>' +
-        '<button onclick="adicionarCarrinho(\'' + esc(item.id) + '\')" title="Adicionar">+</button>' +
+        '<button onclick="adicionarCarrinho(\'' + esc(item.id) + '\')" title="Adicionar ' + esc(item.nome) + '">+</button>' +
         '</div>';
     });
     html += '</div>';
@@ -515,10 +546,11 @@
       var subtotal = item.preco_real * carrinho[id];
       total += subtotal;
       totalUnidades += carrinho[id];
-      html += '<div class="linha"><span>' + esc(item.nome) + ' × ' + carrinho[id] + '</span>' +
-              '<span style="display:flex;align-items:center;gap:8px">' +
+      html += '<div class="linha"><img src="' + fotoSegura(item.foto) + '" alt="" onerror="this.style.visibility=\'hidden\'">' +
+              '<span class="lnome">' + esc(item.nome) + ' × ' + carrinho[id] + '</span>' +
+              '<span style="display:flex;align-items:center;gap:6px;flex-shrink:0">' +
               '<button class="step" onclick="mudarQtd(\'' + esc(id) + '\',-1)" title="Menos 1">−</button>' +
-              '<b>R$ ' + subtotal.toFixed(2) + '</b>' +
+              '<b style="font-size:.85rem">R$ ' + subtotal.toFixed(2) + '</b>' +
               '<button class="step" onclick="mudarQtd(\'' + esc(id) + '\',1)" title="Mais 1">+</button>' +
               '</span></div>';
     }
