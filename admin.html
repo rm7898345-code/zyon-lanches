@@ -287,7 +287,7 @@
 
       var tr = document.createElement('tr');
       tr.innerHTML =
-        '<td>' + esc(p.id) + '<div class="tempo">' + esc(p.criadoEm || '') + '</div></td>' +
+        '<td>' + esc(p.id) + (p.syncIdentifier ? '<div class="tempo" title="Identifier SyncPay">🔄 ' + esc(p.syncIdentifier) + '</div>' : '') + '<div class="tempo">' + esc(p.criadoEm || '') + '</div></td>' +
         '<td><b>' + esc(p.cliente) + '</b></td>' +
         '<td>' + esc(p.endereco) + '</td>' +
         '<td>' + esc(p.tipo) + '</td>' +
