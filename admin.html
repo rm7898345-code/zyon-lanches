@@ -262,7 +262,10 @@
     }
 
     pedidos.forEach(function(p, idx) {
-      var itensTxt = p.itens.map(function(i){ return esc(i.nome) + ' × ' + i.qtd; }).join(' | ');
+      try {
+      var itensTxt = (p.itens || []).map(function(i){ return esc(i.nome) + ' × ' + i.qtd; }).join(' | ');
+      var statusTxt = (p.status || 'desconhecido').replace('_',' ').toUpperCase();
+      var totalTxt = (typeof p.total === 'number') ? p.total.toFixed(2) : esc(p.total || '0.00');
       var acoes = '';
 
       if (p.status === 'aguardando_pagamento') {
@@ -272,7 +275,7 @@
         acoes += '<button class="btn-preparar" onclick="marcarPreparar(' + idx + ')">👨‍🍳 Preparar</button> ';
       }
       if (p.status === 'preparando' || p.status === 'pago') {
-        acoes += '<button class="btn-codigos" onclick="abrirModalCodigos(' + idx + ')">📱 Códigos/Print</button> ';
+        acoes += '<button class="btn-codigos" onclick="abrirModalCodigos(' + idx + ')">✅ PRONTO — Códigos/Print</button> ';
       }
       if (p.status === 'pronto') {
         acoes += '<button class="btn-codigos" onclick="abrirModalCodigos(' + idx + ')">✏ Editar códigos</button> ';
@@ -292,11 +295,17 @@
         '<td>' + esc(p.endereco) + '</td>' +
         '<td>' + (p.tipo ? esc(p.tipo) + (p.consumo ? '<div class="tempo">' + esc(p.consumo) + '</div>' : '') : (p.status === 'pronto' ? '<div class="tempo" style="color:#ffb400">⏳ cliente vai escolher</div>' : '—')) + '</td>' +
         '<td>' + itensTxt + '</td>' +
-        '<td><b style="color:#4caf50">R$ ' + p.total.toFixed(2) + '</b></td>' +
-        '<td><span class="badge ' + p.status + '">' + p.status.replace('_',' ').toUpperCase() + '</span>' +
-        (p.tempoEspera ? '<div class="tempo">⏱ ' + p.tempoEspera + ' min</div>' : '') + codigosTxt + '</td>' +
+        '<td><b style="color:#4caf50">R$ ' + totalTxt + '</b></td>' +
+        '<td><span class="badge ' + esc(p.status) + '">' + statusTxt + '</span>' +
+        (p.tempoEspera ? '<div class="tempo">⏱ ' + esc(p.tempoEspera) + ' min</div>' : '') + codigosTxt + '</td>' +
         '<td class="acoes">' + acoes + '</td>';
       tbody.appendChild(tr);
+      } catch (errLinha) {
+        /* um pedido corrompido não pode derrubar a tabela inteira */
+        var trErro = document.createElement('tr');
+        trErro.innerHTML = '<td colspan="8" style="color:#ff6b6b">⚠ Pedido ' + esc(p.id || idx) + ' com dados inválidos (renderizado parcialmente). Erro: ' + esc(errLinha.message) + '</td>';
+        tbody.appendChild(trErro);
+      }
     });
   }
 
@@ -315,9 +324,11 @@
 
   function marcarPreparar(idx) {
     var p = pedidos[idx];
-    if (!p || p.status !== 'pago') return;
+    if (!p) return;
+    if (p.status !== 'pago') { alert('⚠ Este pedido precisa estar como PAGO antes de preparar!\n\nStatus atual: ' + (p.status || 'desconhecido')); renderizarPedidos(); return; }
     p.status = 'preparando';
     salvarPedidos();
+    alert('👨‍🍳 Pedido em preparação!\n\nQuando terminar, clique no botão verde "✅ PRONTO — Códigos/Print" para marcar como PRONTO e liberar os códigos para o cliente.');
   }
 
   /* ---------- Modal de códigos + print ---------- */
