@@ -601,7 +601,8 @@
     var escondido = getComputedStyle(cart).display === 'none';
     var secaoPag = document.getElementById('telaPagamento');
     var secaoAguar = document.getElementById('telaAguardando');
-    var emFluxo = (secaoPag && secaoPag.style.display !== 'none') || (secaoAguar && secaoAguar.style.display !== 'none');
+    var emFluxo = (secaoPag && getComputedStyle(secaoPag).display !== 'none') ||
+                  (secaoAguar && getComputedStyle(secaoAguar).display !== 'none');
     if (sheetAberto || emFluxo || !escondido) { btn.style.display = 'none'; return; }
     btn.innerHTML = '<span class="cf-esq"><span class="cf-icone">🛒</span><span>Ver carrinho</span></span>' +
                     '<span class="cf-total">' + unidades + ' ' + (unidades === 1 ? 'item' : 'itens') + ' • R$ ' + total.toFixed(2) + '</span>';
