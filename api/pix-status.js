@@ -3,11 +3,15 @@
 const https = require('https');
 const SYNC_API = 'api.syncpayments.com.br';
 
-function chamarAPI(metodo, rota, token) {
+function chamarAPI(metodo, rota, corpo, token) {
   return new Promise(function(resolve, reject) {
+    var data = corpo ? JSON.stringify(corpo) : null;
+    var headers = { 'Accept': 'application/json', 'Host': SYNC_API };
+    if (data) { headers['Content-Type'] = 'application/json'; headers['Content-Length'] = Buffer.byteLength(data); }
+    if (token) { headers['Authorization'] = 'Bearer ' + token; }
     var req = https.request({
       host: SYNC_API, path: '/api/partner/v1' + rota, method: metodo,
-      headers: { 'Accept': 'application/json', 'Host': SYNC_API, 'Authorization': 'Bearer ' + token }
+      headers: headers
     }, function(res) {
       var buf = '';
       res.on('data', function(c){ buf += c; });
@@ -20,6 +24,7 @@ function chamarAPI(metodo, rota, token) {
     });
     req.on('error', reject);
     req.setTimeout(20000, function(){ req.destroy(new Error('Timeout na SyncPay')); });
+    if (data) req.write(data);
     req.end();
   });
 }
@@ -45,7 +50,7 @@ module.exports = async function(req, res) {
     var id = (qs.get('id') || '').replace(/[^a-zA-Z0-9-]/g, '');
     if (!id) { res.writeHead(400); return res.end(JSON.stringify({ error: 'id obrigatório' })); }
     var token = await pegarToken();
-    var d = await chamarAPI('GET', '/transaction/' + id, token);
+    var d = await chamarAPI('GET', '/transaction/' + id, null, token);
     var st = String((d.data && d.data.status) || d.status || '').toLowerCase();
     var pago = st === 'completed';   /* conforme docs: pending | completed | failed | refunded | med */
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
