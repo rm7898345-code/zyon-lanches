@@ -267,6 +267,30 @@
     <div class="dica">💡 Use estoque <b>999</b> para itens ilimitados. Prefira fotos pequenas (máx. ~100KB) para não lotar o armazenamento do navegador.</div>
   </div>
 
+  <h2 style="color:#ffb400; margin-bottom:12px; font-size:1.1rem">🎟 Cupons de Desconto</h2>
+  <div class="form" style="margin-bottom:14px">
+    <div class="row">
+      <div class="campo">
+        <label>Código (sem espaços) *</label>
+        <input type="text" id="cpCodigo" maxlength="20" placeholder="Ex: BEMVINDO10" style="text-transform:uppercase">
+      </div>
+      <div class="campo">
+        <label>Desconto (%) *</label>
+        <input type="number" id="cpDesconto" min="1" max="90" step="1" placeholder="Ex: 10">
+      </div>
+      <div class="campo">
+        <label>Pedido mínimo (R$, opcional)</label>
+        <input type="number" id="cpMin" min="0" step="0.01" placeholder="Ex: 30.00">
+      </div>
+      <div class="campo">
+        <label>Limite de usos</label>
+        <input type="number" id="cpMaxUsos" min="1" step="1" value="100">
+      </div>
+    </div>
+    <button onclick="adicionarCupom()" style="background:linear-gradient(90deg,#2e7d32,#4caf50)">🎟 Criar Cupom</button>
+  </div>
+  <div id="listaCupons" style="margin-bottom:24px"></div>
+
   <h2 style="color:#ffb400; margin-bottom:12px; font-size:1.1rem">📋 Itens Cadastrados</h2>
   <div id="listaItens"></div>
 </div>
@@ -545,8 +569,80 @@
     input.value = '';
   }
 
+  /* ---------- Cupons de desconto ---------- */
+  function adicionarCupom() {
+    var codigo = document.getElementById('cpCodigo').value.trim().toUpperCase().replace(/\s/g, '');
+    var desconto = parseFloat(document.getElementById('cpDesconto').value);
+    var valorMin = parseFloat(document.getElementById('cpMin').value) || 0;
+    var maxUsos = parseInt(document.getElementById('cpMaxUsos').value, 10) || 100;
+
+    if (!codigo) { alert('⚠ Digite o código do cupom!'); return; }
+    if (isNaN(desconto) || desconto < 1 || desconto > 90) { alert('⚠ Desconto deve ser entre 1% e 90%!'); return; }
+    if (maxUsos < 1) { alert('⚠ Limite de usos inválido!'); return; }
+
+    var cupons = lerLS('zyon_cupons', '[]');
+    if (cupons.some(function(c){ return c.codigo === codigo; })) { alert('⚠ Já existe um cupom com esse código!'); return; }
+
+    cupons.push({
+      codigo: codigo,
+      desconto: desconto,
+      valorMin: valorMin,
+      maxUsos: maxUsos,
+      usados: 0,
+      ativo: true,
+      criadoEm: new Date().toLocaleString('pt-BR')
+    });
+    localStorage.setItem('zyon_cupons', JSON.stringify(cupons));
+    document.getElementById('cpCodigo').value = '';
+    document.getElementById('cpDesconto').value = '';
+    document.getElementById('cpMin').value = '';
+    document.getElementById('cpMaxUsos').value = '100';
+    renderizarCupons();
+    alert('✅ Cupom ' + codigo + ' criado! (' + desconto + '% OFF)');
+  }
+
+  function renderizarCupons() {
+    var cupons = lerLS('zyon_cupons', '[]');
+    var lista = document.getElementById('listaCupons');
+    if (cupons.length === 0) {
+      lista.innerHTML = '<div class="vazio" style="padding:14px">Nenhum cupom criado. Crie o primeiro acima! 💡</div>';
+      return;
+    }
+    lista.innerHTML = '';
+    cupons.forEach(function(c, idx) {
+      var div = document.createElement('div');
+      div.className = 'item-card';
+      div.innerHTML =
+        '<div class="info"><b>🎟 ' + esc(c.codigo) + '</b>' +
+        '<div class="det">' + c.desconto + '% OFF' +
+        (c.valorMin ? ' • pedido mínimo R$ ' + c.valorMin.toFixed(2) : '') +
+        ' • usos: ' + (c.usados || 0) + '/' + c.maxUsos +
+        (c.ativo ? '' : ' • <span style="color:#ff6b6b">DESATIVADO</span>') + '</div></div>' +
+        '<div style="display:flex;align-items:center;gap:8px">' +
+        '<button onclick="alternarCupom(' + idx + ')" style="background:' + (c.ativo ? '#8d6e00' : '#2e7d32') + '">' + (c.ativo ? 'Desativar' : 'Ativar') + '</button>' +
+        '<button onclick="removerCupom(' + idx + ')">Remover</button></div>';
+      lista.appendChild(div);
+    });
+  }
+
+  function alternarCupom(idx) {
+    var cupons = lerLS('zyon_cupons', '[]');
+    cupons[idx].ativo = !cupons[idx].ativo;
+    localStorage.setItem('zyon_cupons', JSON.stringify(cupons));
+    renderizarCupons();
+  }
+
+  function removerCupom(idx) {
+    var cupons = lerLS('zyon_cupons', '[]');
+    if (!confirm('Remover o cupom ' + cupons[idx].codigo + '?')) return;
+    cupons.splice(idx, 1);
+    localStorage.setItem('zyon_cupons', JSON.stringify(cupons));
+    renderizarCupons();
+  }
+
   carregarConfig();
   renderizarItens();
+  renderizarCupons();
 </script>
 </body>
 </html>
