@@ -76,6 +76,40 @@
   .sug-card button { background:linear-gradient(90deg,#ff5f00,#ffb400); color:#fff; border:none; width:30px; height:30px; border-radius:50%; font-weight:800; cursor:pointer; flex-shrink:0; }
   .economia { text-align:center; color:#4caf50; font-size:.85rem; font-weight:700; margin-top:8px; }
 
+  /* ====== Carrinho flutuante (estilo app de delivery) ====== */
+  #btnCarrinhoFlutuante { display:none; position:fixed; bottom:16px; left:14px; right:14px; z-index:900;
+    background:linear-gradient(90deg,#ff5f00,#ffb400); color:#fff; border:none; border-radius:16px;
+    padding:14px 18px; font-size:1rem; font-weight:800; cursor:pointer; box-shadow:0 8px 24px rgba(0,0,0,.5);
+    justify-content:space-between; align-items:center; width:auto; max-width:520px; margin:0 auto; }
+  #btnCarrinhoFlutuante .cf-esq { display:flex; align-items:center; gap:10px; }
+  #btnCarrinhoFlutuante .cf-icone { background:rgba(255,255,255,.25); border-radius:10px; padding:4px 10px; font-size:1.1rem; }
+  #btnCarrinhoFlutuante .cf-total { background:#fff; color:#12121a; border-radius:10px; padding:4px 10px; font-size:.95rem; }
+  #fundoCarrinho { display:none; position:fixed; inset:0; background:rgba(0,0,0,.65); z-index:950; }
+
+  /* ====== Carrinho como bottom sheet (mobile) ====== */
+  @media (max-width: 768px) {
+    .container { padding:14px; }
+    header h1 { font-size:1.4rem; }
+    .dados .campo { min-width:100%; }
+    .tabs { overflow-x:auto; flex-wrap:nowrap; padding-bottom:4px; -webkit-overflow-scrolling:touch; }
+    .tab { flex-shrink:0; }
+    .grid { grid-template-columns:repeat(2, 1fr); gap:10px; }
+    .card .foto { height:130px; }
+    .pagamento, .aguardando, .prontotela { padding:22px 16px; }
+    .sug-grid { grid-template-columns:1fr; }
+
+    /* carrinho vira bottom sheet */
+    #divCarrinho.sheet-aberto {
+      display:block !important; position:fixed; left:0; right:0; bottom:0; z-index:1000;
+      max-height:82vh; overflow-y:auto; border-radius:20px 20px 0 0; margin:0; padding-bottom:24px;
+      box-shadow:0 -10px 40px rgba(0,0,0,.6); animation:subir .25s ease-out;
+    }
+    @keyframes subir { from { transform:translateY(100%); } to { transform:translateY(0); } }
+    .sheet-fechar { display:flex; justify-content:center; padding:4px 0 8px; }
+    .sheet-fechar button { background:#2c2c3a; color:#ccc; border:none; border-radius:20px; padding:6px 40px; font-size:1.1rem; cursor:pointer; }
+  }
+  @media (min-width: 769px) { .sheet-fechar { display:none; } }
+
   /* ====== TELA DE PAGAMENTO ====== */
   .pagamento { display:none; background:#1e1e2a; border-radius:16px; padding:30px; text-align:center; box-shadow:0 6px 20px rgba(0,0,0,.5); }
   .pagamento h2 { color:#4caf50; font-size:1.5rem; margin-bottom:10px; }
@@ -169,6 +203,7 @@
     </div>
 
     <div class="carrinho" id="divCarrinho">
+      <div class="sheet-fechar"><button onclick="toggleCarrinho()" aria-label="Fechar carrinho">▼</button></div>
       <h2>🛒 Seu carrinho</h2>
       <div id="listaCarrinho"></div>
       <div id="sugestoes"></div>
@@ -504,6 +539,53 @@
     renderizarSugestoes();
     document.getElementById('btnFinalizar').disabled = (totalUnidades === 0);
     div.style.display = (totalUnidades > 0) ? 'block' : 'none';
+    atualizarFlutuante(totalUnidades, totalFinal);
+  }
+
+  /* ---------- Carrinho flutuante ---------- */
+  var sheetAberto = false;
+
+  function atualizarFlutuante(unidades, total) {
+    var btn = document.getElementById('btnCarrinhoFlutuante');
+    var cart = document.getElementById('divCarrinho');
+    if (unidades === 0) { btn.style.display = 'none'; return; }
+    /* some se a tela de pagamento/entrega estiver visível, ou se o carrinho já estiver na tela */
+    var escondido = getComputedStyle(cart).display === 'none';
+    var secaoPag = document.getElementById('telaPagamento');
+    var secaoAguar = document.getElementById('telaAguardando');
+    var emFluxo = (secaoPag && secaoPag.style.display !== 'none') || (secaoAguar && secaoAguar.style.display !== 'none');
+    if (sheetAberto || emFluxo || !escondido) { btn.style.display = 'none'; return; }
+    btn.innerHTML = '<span class="cf-esq"><span class="cf-icone">🛒</span><span>Ver carrinho</span></span>' +
+                    '<span class="cf-total">' + unidades + ' ' + (unidades === 1 ? 'item' : 'itens') + ' • R$ ' + total.toFixed(2) + '</span>';
+    btn.style.display = 'flex';
+  }
+
+  /* esconde o botão flutuante quando o carrinho está visível na tela */
+  var cartVisivelNaTela = false;
+  var observadorCarrinho = new IntersectionObserver(function(ent) {
+    cartVisivelNaTela = ent[0].isIntersecting;
+    if (cartVisivelNaTela) { document.getElementById('btnCarrinhoFlutuante').style.display = 'none'; }
+    else { atualizarCarrinho(); }
+  }, { threshold: 0.1 });
+  var alvoObs = document.getElementById('divCarrinho');
+  if (alvoObs) observadorCarrinho.observe(alvoObs);
+
+  function toggleCarrinho() {
+    var cart = document.getElementById('divCarrinho');
+    var fundo = document.getElementById('fundoCarrinho');
+    var btn = document.getElementById('btnCarrinhoFlutuante');
+    sheetAberto = !sheetAberto;
+    if (sheetAberto) {
+      cart.classList.add('sheet-aberto');
+      fundo.style.display = 'block';
+      btn.style.display = 'none';
+      if (Object.keys(carrinho).length === 0) { sheetAberto = false; cart.classList.remove('sheet-aberto'); fundo.style.display = 'none'; mostrarMensagem('⚠ Seu carrinho está vazio!', 'erro'); return; }
+      cart.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      cart.classList.remove('sheet-aberto');
+      fundo.style.display = 'none';
+      atualizarCarrinho();
+    }
   }
 
   function calcularTempo(totalItens) {
@@ -830,5 +912,7 @@
   renderizarCardapio();
   renderizarMeusPedidos();
 </script>
+  <button id="btnCarrinhoFlutuante" onclick="toggleCarrinho()"></button>
+  <div id="fundoCarrinho" onclick="toggleCarrinho()"></div>
 </body>
 </html>
