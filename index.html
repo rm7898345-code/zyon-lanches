@@ -72,12 +72,12 @@
   .sugestoes { margin-top:16px; padding-top:14px; border-top:1px dashed #2c2c3a; }
   .sugestoes .titulo-sug { color:#ffb400; font-size:.85rem; font-weight:800; margin-bottom:8px; }
   .sug-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
-  .sug-card { background:#12121a; border:1px solid #2c2c3a; border-radius:10px; padding:5px; display:flex; flex-direction:column; align-items:center; gap:4px; }
-  .sug-card img { width:44px; height:40px; object-fit:contain; border-radius:8px; background:#2c2c3a; padding:3px; }
-  .sug-card .info { min-width:0; text-align:center; }
+  .sug-card { background:#12121a; border:1px solid #2c2c3a; border-radius:10px; padding:6px; display:flex; align-items:center; gap:6px; height:52px; overflow:hidden; }
+  .sug-card img { width:40px; height:40px; object-fit:contain; border-radius:8px; background:#2c2c3a; padding:2px; flex-shrink:0; }
+  .sug-card .info { flex:1; min-width:0; }
   .sug-card .info b { font-size:.62rem; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#ccc; }
   .sug-card .info span { color:#4caf50; font-size:.6rem; font-weight:700; }
-  .sug-card button { background:linear-gradient(90deg,#ff5f00,#ffb400); color:#fff; border:none; width:24px; height:24px; border-radius:50%; font-weight:800; cursor:pointer; font-size:.85rem; line-height:1; }
+  .sug-card button { background:linear-gradient(90deg,#ff5f00,#ffb400); color:#fff; border:none; width:24px; height:24px; border-radius:50%; font-weight:800; cursor:pointer; font-size:.85rem; line-height:1; flex-shrink:0; }
   .economia { text-align:center; color:#4caf50; font-size:.85rem; font-weight:700; margin-top:8px; }
 
   /* ====== Carrinho flutuante (estilo app de delivery) ====== */
@@ -122,7 +122,8 @@
     #divCarrinho.sheet-aberto .cupom-aplicado { margin-top:14px; padding:14px; font-size:1rem; }
     #divCarrinho.sheet-aberto .sugestoes { margin-top:22px; padding-top:18px; }
     #divCarrinho.sheet-aberto .sugestoes .titulo-sug { font-size:1rem; margin-bottom:10px; }
-    #divCarrinho.sheet-aberto .sug-card img { width:52px; height:48px; }
+    #divCarrinho.sheet-aberto .sug-card { height:60px; padding:8px; gap:8px; }
+    #divCarrinho.sheet-aberto .sug-card img { width:46px; height:46px; }
     #divCarrinho.sheet-aberto .sug-card .info b { font-size:.75rem; }
     #divCarrinho.sheet-aberto .sug-card .info span { font-size:.72rem; }
     #divCarrinho.sheet-aberto .sug-card button { width:30px; height:30px; font-size:1rem; }
@@ -234,6 +235,7 @@
       <div id="cupomAplicado" class="cupom-aplicado" style="display:none"></div>
       <div class="total" style="margin-top:12px"><span>Subtotal</span><span id="subtotalGeral">R$ 0.00</span></div>
       <div class="linha desconto" id="linhaDesconto" style="display:none"><span>🎟 Desconto</span><span id="valorDesconto">R$ 0.00</span></div>
+      <div class="linha desconto" id="linhaTaxa" style="display:none"><span>🛵 Taxa de serviço</span><span id="valorTaxa">R$ 2.00</span></div>
       <div class="total"><span style="font-size:1.35rem">Total</span><span id="totalGeral">R$ 0.00</span></div>
       <div class="economia" id="economiaMsg" style="display:none"></div>
       <button class="finalizar" id="btnFinalizar" onclick="finalizarPedido()" disabled>✅ Finalizar e Pagar</button>
@@ -581,14 +583,17 @@
     }
     lista.innerHTML = html;
 
-    /* Desconto do cupom */
+    /* Desconto do cupom e taxa de serviço */
     var desconto = 0;
     if (cupomAtivo && total > 0) desconto = Math.round(total * cupomAtivo.desconto) / 100;
-    var totalFinal = Math.max(0, total - desconto);
+    var TAXA_SERVICO = 2.00;
+    var totalFinal = Math.max(0, total - desconto + TAXA_SERVICO);
 
     document.getElementById('subtotalGeral').textContent = 'R$ ' + total.toFixed(2);
     document.getElementById('linhaDesconto').style.display = desconto > 0 ? 'flex' : 'none';
     document.getElementById('valorDesconto').textContent = '- R$ ' + desconto.toFixed(2);
+    document.getElementById('linhaTaxa').style.display = totalUnidades > 0 ? 'flex' : 'none';
+    document.getElementById('valorTaxa').textContent = 'R$ ' + TAXA_SERVICO.toFixed(2);
     document.getElementById('totalGeral').textContent = 'R$ ' + totalFinal.toFixed(2);
     var eco = document.getElementById('economiaMsg');
     eco.style.display = desconto > 0 ? 'block' : 'none';
@@ -713,7 +718,7 @@
         return;
       }
     }
-    var totalFinal = Math.max(0, total - desconto);
+    var totalFinal = Math.max(0, total - desconto + 2.00); /* + taxa de serviço */
 
     pedidoAtual = {
       id: 'ped_' + Date.now(),
@@ -727,6 +732,7 @@
       itens: itensNomeados,
       subtotal: total,
       cupom: cupomAtivo ? { codigo: cupomAtivo.codigo.toUpperCase(), desconto: cupomAtivo.desconto, valorDesconto: desconto } : null,
+      taxaServico: 2.00,
       total: totalFinal,
       status: 'aguardando_pagamento',   /* passa a pago só quando a SyncPay confirmar */
       tempoEspera: calcularTempo(totalUnidades),
@@ -996,6 +1002,7 @@
     }
     if (!html) html = '<div class="instr">Aguardando o administrador enviar os códigos…</div>';
     if (p.tipo) html += '<div class="instr" style="margin-top:10px">📍 ' + esc(p.tipo) + (p.consumo ? ' — ' + esc(p.consumo) : '') + '</div>';
+    if (p.taxaServico) html += '<div class="instr">Inclui 🛵 taxa de serviço: R$ ' + p.taxaServico.toFixed(2) + '</div>';
     html += '<div class="instr" style="margin-top:14px">💰 Total pago: <b style="color:#4caf50">R$ ' + p.total.toFixed(2) + '</b></div>';
     document.getElementById('prConteudo').innerHTML = html;
   }
