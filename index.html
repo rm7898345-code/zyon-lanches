@@ -178,7 +178,7 @@
     <div class="pixbox">
       <div class="titulo">✨ PIX — Pague escaneando ou copiando</div>
       <div id="pgStatus" style="font-size:.85rem; margin-bottom:10px"></div>
-      <img id="pgQR" alt="QR Code Pix" style="display:none; width:230px; height:230px; background:#fff; border-radius:10px; padding:6px">
+      <img id="pgQR" alt="QR Code Pix" style="display:none; width:230px; height:230px; background:#fff; border-radius:10px; padding:6px; margin:0 auto">
       <div class="chave" id="pgChave">—</div>
       <div class="copiacola" id="pgCopiaCola">—</div>
       <button class="botao-copiar" onclick="copiarPix()">📋 Copiar código Pix</button>
@@ -450,7 +450,7 @@
       pedidoAtual.itens.map(function(i){ return esc(i.nome) + ' × ' + i.qtd; }).join(', ');
 
     try {
-      document.getElementById('pgStatus').textContent = '⏳ Gerando seu Pix na SyncPay…';
+      document.getElementById('pgStatus').textContent = '⏳ Gerando seu Pix…';
 
       var r = await fetch(API + '/pix/criar', {
         method: 'POST',
@@ -471,11 +471,10 @@
       pedidoAtual.syncIdentifier = d.identifier;
       pedidoAtual.pixCode = d.pix_code;
 
-      document.getElementById('pgChave').textContent = 'Pix Copia e Cola — SyncPay';
+      document.getElementById('pgChave').textContent = 'Pix Copia e Cola';
       document.getElementById('pgCopiaCola').textContent = d.pix_code;
       atualizarQR(d.pix_code);
-      document.getElementById('pgStatus').textContent = '✅ Pix gerado! A confirmação é AUTOMÁTICA quando o pagamento for aprovado.';
-      document.getElementById('pgConfirmarManual').style.display = 'none';
+      document.getElementById('pgStatus').textContent = '✅ Pix gerado! A confirmação é AUTOMÁTICA quando o pagamento for aprovado.';      document.getElementById('pgConfirmarManual').style.display = 'none';
       document.getElementById('pgManualInfo').style.display = 'none';
 
       /* inicia consulta automática de status */
@@ -483,7 +482,7 @@
     } catch (e) {
       /* Servidor fora do ar ou SyncPay não configurada -> fallback manual */
       var config = lerLS('zyon_config', '{}');
-      document.getElementById('pgStatus').textContent = '⚠ Pagamento automático indisponível (' + e.message + '). Use o Pix manual abaixo.';
+      document.getElementById('pgStatus').textContent = '⚠ Pagamento automático temporariamente indisponível. Use o Pix manual abaixo.';
       document.getElementById('pgChave').textContent = config.chavePix ? 'Chave: ' + config.chavePix : '⚠ Admin não configurou o pagamento!';
       document.getElementById('pgCopiaCola').textContent = config.chavePix ? gerarPixManual(config.chavePix, config.nomePix || 'ZYON', config.cidadePix || 'SAO PAULO', pedidoAtual.total, pedidoAtual.id) : '';
       atualizarQR(document.getElementById('pgCopiaCola').textContent || '');
@@ -539,7 +538,7 @@
     document.getElementById('agTempo').textContent = pedidoAtual.tempoEspera + ' minutos';
     document.getElementById('agItens').innerHTML = '<b>Itens:</b> ' +
       pedidoAtual.itens.map(function(i){ return esc(i.nome) + ' × ' + i.qtd; }).join(', ') +
-      (automatico ? '<div style="color:#4caf50; margin-top:6px">✅ Pagamento aprovado automaticamente pela SyncPay</div>' : '');
+      (automatico ? '<div style="color:#4caf50; margin-top:6px">✅ Pagamento aprovado automaticamente</div>' : '');
   }
 
   function atualizarQR(codigoPix) {
