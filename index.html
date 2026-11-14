@@ -57,10 +57,11 @@
   .carrinho button.finalizar { width:100%; margin-top:16px; background:#4caf50; color:#fff; border:none; padding:14px; border-radius:8px; font-size:1.05rem; font-weight:700; cursor:pointer; }
   .carrinho button.finalizar:disabled { background:#444; cursor:not-allowed; }
   .carrinho .limpar { width:100%; margin-top:8px; background:none; border:none; color:#ff6b6b; cursor:pointer; font-size:.85rem; }
-  .carrinho .linha { display:flex; align-items:center; gap:8px; }
-  .carrinho .linha img { width:34px; height:34px; object-fit:cover; border-radius:8px; background:#2c2c3a; flex-shrink:0; }
-  .carrinho .linha .lnome { flex:1; min-width:0; font-size:.88rem; }
-  .carrinho .linha button.step { background:#2c2c3a; color:#ffb400; border:none; width:26px; height:26px; border-radius:8px; font-weight:800; cursor:pointer; font-size:1rem; flex-shrink:0; }
+  .carrinho .linha { display:flex; align-items:center; gap:10px; padding:6px 0; }
+  .carrinho .linha img { width:46px; height:46px; object-fit:cover; border-radius:10px; background:#2c2c3a; flex-shrink:0; }
+  .carrinho .linha .lnome { flex:1; min-width:0; font-size:1rem; font-weight:600; }
+  .carrinho .linha button.step { background:#2c2c3a; color:#ffb400; border:none; width:32px; height:32px; border-radius:10px; font-weight:800; cursor:pointer; font-size:1.15rem; flex-shrink:0; }
+  .carrinho .linha b { font-size:1rem; }
   .carrinho .linha.desconto span:last-child { color:#4caf50; font-weight:800; }
   .cupom-row { display:flex; gap:8px; margin-top:14px; }
   .cupom-row input { flex:1; padding:10px; border-radius:8px; border:1px solid #333; background:#12121a; color:#fff; text-transform:uppercase; letter-spacing:1px; }
@@ -71,12 +72,12 @@
   .sugestoes { margin-top:16px; padding-top:14px; border-top:1px dashed #2c2c3a; }
   .sugestoes .titulo-sug { color:#ffb400; font-size:.85rem; font-weight:800; margin-bottom:8px; }
   .sug-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
-  .sug-card { background:#12121a; border:1px solid #2c2c3a; border-radius:10px; padding:6px; display:flex; align-items:center; gap:6px; }
-  .sug-card img { width:38px; height:38px; object-fit:cover; border-radius:8px; background:#2c2c3a; flex-shrink:0; }
-  .sug-card .info { flex:1; min-width:0; display:none; }
-  .sug-card .info b { font-size:.7rem; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .sug-card .info span { color:#4caf50; font-size:.65rem; font-weight:700; }
-  .sug-card button { background:linear-gradient(90deg,#ff5f00,#ffb400); color:#fff; border:none; width:26px; height:26px; border-radius:50%; font-weight:800; cursor:pointer; flex-shrink:0; font-size:.9rem; }
+  .sug-card { background:#12121a; border:1px solid #2c2c3a; border-radius:10px; padding:5px; display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .sug-card img { width:100%; height:44px; object-fit:cover; border-radius:8px; background:#2c2c3a; }
+  .sug-card .info { min-width:0; text-align:center; }
+  .sug-card .info b { font-size:.62rem; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#ccc; }
+  .sug-card .info span { color:#4caf50; font-size:.6rem; font-weight:700; }
+  .sug-card button { background:linear-gradient(90deg,#ff5f00,#ffb400); color:#fff; border:none; width:24px; height:24px; border-radius:50%; font-weight:800; cursor:pointer; font-size:.85rem; line-height:1; }
   .economia { text-align:center; color:#4caf50; font-size:.85rem; font-weight:700; margin-top:8px; }
 
   /* ====== Carrinho flutuante (estilo app de delivery) ====== */
@@ -550,7 +551,7 @@
               '<span class="lnome">' + esc(item.nome) + ' × ' + carrinho[id] + '</span>' +
               '<span style="display:flex;align-items:center;gap:6px;flex-shrink:0">' +
               '<button class="step" onclick="mudarQtd(\'' + esc(id) + '\',-1)" title="Menos 1">−</button>' +
-              '<b style="font-size:.85rem">R$ ' + subtotal.toFixed(2) + '</b>' +
+              '<b>R$ ' + subtotal.toFixed(2) + '</b>' +
               '<button class="step" onclick="mudarQtd(\'' + esc(id) + '\',1)" title="Mais 1">+</button>' +
               '</span></div>';
     }
