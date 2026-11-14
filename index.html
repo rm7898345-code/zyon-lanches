@@ -106,10 +106,31 @@
     /* carrinho em tela cheia (mobile) */
     #divCarrinho.sheet-aberto {
       display:block !important; position:fixed; inset:0; z-index:1000;
-      border-radius:0; margin:0; padding:0 16px 30px; height:100vh;
+      border-radius:0; margin:0; padding:0 20px 34px; height:100vh;
       overflow-y:auto; -webkit-overflow-scrolling:touch;
       box-shadow:none; animation:abrirTela .2s ease-out;
     }
+    #divCarrinho.sheet-aberto h2 { font-size:1.35rem; margin:18px 0 14px; }
+    #divCarrinho.sheet-aberto .linha { padding:12px 0; gap:12px; border-bottom:1px solid #23232f; }
+    #divCarrinho.sheet-aberto .linha img { width:60px; height:60px; border-radius:12px; }
+    #divCarrinho.sheet-aberto .linha .lnome { font-size:1.1rem; }
+    #divCarrinho.sheet-aberto .linha button.step { width:38px; height:38px; font-size:1.3rem; }
+    #divCarrinho.sheet-aberto .linha b { font-size:1.1rem; }
+    #divCarrinho.sheet-aberto .cupom-row { margin-top:20px; gap:10px; }
+    #divCarrinho.sheet-aberto .cupom-row input { padding:14px; font-size:1rem; }
+    #divCarrinho.sheet-aberto .cupom-row button { padding:14px 22px; font-size:1rem; }
+    #divCarrinho.sheet-aberto .cupom-aplicado { margin-top:14px; padding:14px; font-size:1rem; }
+    #divCarrinho.sheet-aberto .sugestoes { margin-top:22px; padding-top:18px; }
+    #divCarrinho.sheet-aberto .sugestoes .titulo-sug { font-size:1rem; margin-bottom:10px; }
+    #divCarrinho.sheet-aberto .sug-card img { width:52px; height:48px; }
+    #divCarrinho.sheet-aberto .sug-card .info b { font-size:.75rem; }
+    #divCarrinho.sheet-aberto .sug-card .info span { font-size:.72rem; }
+    #divCarrinho.sheet-aberto .sug-card button { width:30px; height:30px; font-size:1rem; }
+    #divCarrinho.sheet-aberto .total { padding:10px 0; font-size:1.15rem; }
+    #divCarrinho.sheet-aberto .total span:last-child { font-size:1.15rem; }
+    #divCarrinho.sheet-aberto .economia { font-size:1rem; margin-top:10px; }
+    #divCarrinho.sheet-aberto .finalizar { padding:16px; font-size:1.15rem; margin-top:14px; border-radius:14px; }
+    #divCarrinho.sheet-aberto .limpar { font-size:.95rem; margin-top:10px; padding:10px; }
     @keyframes abrirTela { from { transform:scale(.98); opacity:.6; } to { transform:scale(1); opacity:1; } }
     .sheet-fechar { position:sticky; top:0; z-index:2; background:#1e1e2a; margin:0 -16px 10px; padding:12px 16px; border-bottom:1px solid #2c2c3a; }
     .sheet-fechar button { width:100%; background:#2c2c3a; color:#ffb400; border:none; border-radius:12px; padding:12px; font-size:.95rem; font-weight:800; cursor:pointer; }
