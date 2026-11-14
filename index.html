@@ -151,6 +151,8 @@
   .st.pago { background:#00897b; color:#fff; }
   .st.preparando { background:#0277bd; color:#fff; }
   .st.pronto { background:#2e7d32; color:#fff; }
+  .st.solicitado { background:#8d6e00; color:#fff; }
+  .st.codigos_enviados { background:#2e7d32; color:#fff; }
   .st.entregue { background:#555; color:#fff; }
   .mp-item button { background:#ffb400; color:#12121a; border:none; padding:8px 14px; border-radius:8px; font-weight:800; cursor:pointer; }
 </style>
@@ -898,11 +900,26 @@
     if (!pedidoAtual) return;
     if (!pedidoAtual.tipo) { mostrarMensagem('⚠ Escolha Balcão ou Drive!', 'erro'); return; }
     if (pedidoAtual.tipo === 'Balcão' && !pedidoAtual.consumo) { mostrarMensagem('⚠ Escolha se vai comer no restaurante ou retirar!', 'erro'); return; }
-    /* salva a escolha para o admin ver */
+    /* salva a escolha e avisa o admin que o cliente está solicitando os códigos */
     var pedidos = lerLS('zyon_pedidos', '[]');
     var p = pedidos.find(function(x){ return x.id === pedidoAtual.id; });
-    if (p) { p.tipo = pedidoAtual.tipo; p.consumo = pedidoAtual.consumo; localStorage.setItem('zyon_pedidos', JSON.stringify(pedidos)); }
-    mostrarTelaPronto(pedidoAtual);
+    if (p) {
+      p.tipo = pedidoAtual.tipo;
+      p.consumo = pedidoAtual.consumo;
+      p.status = 'solicitado';
+      localStorage.setItem('zyon_pedidos', JSON.stringify(pedidos));
+      pedidoAtual.status = 'solicitado';
+    }
+    mostrarSolicitado();
+  }
+
+  /* Cliente solicitou -> aguarda o admin preparar na cozinha e enviar os códigos */
+  function mostrarSolicitado() {
+    document.getElementById('solTipo').style.display = 'none';
+    document.getElementById('agTitulo').textContent = '🔐 Código solicitado!';
+    document.getElementById('agStatus').textContent = '⏳ Estamos preparando seu pedido na cozinha. Seus códigos aparecem aqui em instantes!';
+    var btn = document.querySelector('#agAprovado .finalizar');
+    if (btn) btn.style.display = 'none';
   }
 
   function mostrarTelaPronto(p) {
@@ -947,14 +964,14 @@
       var p = pedidos.find(function(x){ return x.id === pid; });
       if (!p) return;
       var st = p.status;
-      var stTxt = { aguardando_pagamento:'⏳ Aguardando pagamento', pago:'💰 Pago — aguardando', preparando:'👨‍🍳 Preparando', pronto:'✅ Pronto!', entregue:'📦 Entregue' }[st] || st;
+      var stTxt = { aguardando_pagamento:'⏳ Aguardando pagamento', pago:'💰 Pago', preparando:'👨‍🍳 Preparando', pronto:'✅ Aprovado — solicite o código', solicitado:'🔐 Código solicitado', codigos_enviados:'🔑 Códigos prontos!', entregue:'📦 Entregue' }[st] || st;
       var item = document.createElement('div');
       item.className = 'mp-item';
       item.innerHTML =
         '<div class="det"><b>' + p.itens.map(function(i){ return esc(i.nome) + ' × ' + i.qtd; }).join(', ') + '</b><br>' +
         'R$ ' + p.total.toFixed(2) + ' • ' + esc(p.criadoEm || '') + '</div>' +
         '<span class="st ' + st + '">' + stTxt + '</span>' +
-        (st === 'pronto' ? '<button onclick="verPronto(\'' + p.id + '\')">Ver códigos 📱</button>' : '');
+        (['pronto','solicitado','codigos_enviados'].indexOf(st) >= 0 ? '<button onclick="verPronto(\'' + p.id + '\')">Abrir 📱</button>' : '');
       lista.appendChild(item);
     });
   }
@@ -963,12 +980,11 @@
     var pedidos = lerLS('zyon_pedidos', '[]');
     var p = pedidos.find(function(x){ return x.id === pid; });
     if (!p) return;
-    if (p.status === 'pronto' && p.tipo && (p.tipo === 'Drive' || p.consumo)) mostrarTelaPronto(p);
-    else {
-      document.getElementById('telaCliente').style.display = 'none';
-      document.getElementById('telaAguardando').style.display = 'block';
-      mostrarAprovado(p);
-    }
+    if (p.status === 'codigos_enviados' || (p.codigosApp && p.codigosApp.length)) { mostrarTelaPronto(p); return; }
+    document.getElementById('telaCliente').style.display = 'none';
+    document.getElementById('telaAguardando').style.display = 'block';
+    if (p.status === 'solicitado') mostrarSolicitado();
+    else mostrarAprovado(p);
   }
 
   /* ---------- Sincronização em tempo real entre abas ---------- */
@@ -976,17 +992,19 @@
     if (e.key === 'zyon_pedidos' && pedidoAtual) {
       var pedidos = lerLS('zyon_pedidos', '[]');
       var atualizado = pedidos.find(function(x){ return x.id === pedidoAtual.id; });
-      if (atualizado && atualizado.status !== pedidoAtual.status) {
+      var statusAnterior = pedidoAtual.status;
+      if (atualizado && atualizado.status !== statusAnterior) {
         pedidoAtual = atualizado;
         if (atualizado.status === 'preparando') {
           /* segue na tela aguardando, só atualiza o texto */
           document.getElementById('agTempo').textContent = pedidoAtual.tempoEspera + ' minutos';
         }
         if (atualizado.status === 'pronto') {
-          /* se o cliente já escolheu como vai pegar, mostra os códigos direto; senão, botão SOLICITAR CÓDIGO */
-          if (atualizado.tipo && (atualizado.tipo === 'Drive' || atualizado.consumo)) mostrarTelaPronto(atualizado);
-          else mostrarAprovado(atualizado);
+          /* admin fechou o pedido no app: libera o botão SOLICITAR CÓDIGO */
+          if (document.getElementById('telaAguardando').style.display === 'block') mostrarAprovado(atualizado);
         }
+        if (atualizado.status === 'solicitado') mostrarSolicitado();
+        if (atualizado.status === 'codigos_enviados') mostrarTelaPronto(atualizado);
         if (atualizado.status === 'entregue' && document.getElementById('telaPronto').style.display === 'block') {
           voltarCliente();
         }

@@ -25,6 +25,8 @@
   .badge.pago { background:#00897b; color:#fff; }
   .badge.preparando { background:#0277bd; color:#fff; }
   .badge.pronto { background:#2e7d32; color:#fff; }
+  .badge.solicitado { background:#e65100; color:#fff; }
+  .badge.codigos_enviados { background:#2e7d32; color:#fff; }
   .badge.entregue { background:#555; color:#fff; }
   .acoes button { border:none; padding:6px 10px; border-radius:6px; cursor:pointer; font-weight:700; font-size:.76rem; margin:2px; white-space:nowrap; }
   .btn-pago { background:#00897b; color:#fff; }
@@ -198,7 +200,7 @@
   </div>
 
   <div class="aviso">
-    📌 <b>Fluxo:</b> 1) Cliente pede e paga no Pix → pedido entra como <b>Aguardando pagamento</b> → você confirma o recebimento (<b>Pago</b>). 2) Clique <b>Preparar</b> para iniciar a preparação. 3) Quando estiver pronto, clique <b>Códigos/Print</b>: digite os códigos do app McDonald's e anexe o print — o cliente recebe automaticamente na tela dele.
+    📌 <b>Fluxo:</b> 1) Cliente paga no Pix → <b>Pago</b> 2) Você faz os pedidos no app McDonald's → clica <b>✅ PRONTO (fiz os pedidos)</b> → o cliente ganha o botão <b>SOLICITAR CÓDIGO</b>. 3) Quando o cliente solicitar (estiver chegando), o pedido vira <b>🔔 Solicitado</b> → aí você prepara na cozinha e clica <b>🍳 Preparar + Códigos/Print</b> para digitar os códigos e anexar o print — o cliente recebe na hora.
   </div>
 
   <table>
@@ -272,12 +274,16 @@
         acoes += '<button class="btn-pago" onclick="confirmarPagamento(' + idx + ')">💰 Confirmar Pago</button> ';
       }
       if (p.status === 'pago') {
-        acoes += '<button class="btn-preparar" onclick="marcarPreparar(' + idx + ')">👨‍🍳 Preparar</button> ';
-      }
-      if (p.status === 'preparando' || p.status === 'pago') {
-        acoes += '<button class="btn-codigos" onclick="abrirModalCodigos(' + idx + ')">✅ PRONTO — Códigos/Print</button> ';
+        acoes += '<button class="btn-preparar" onclick="marcarPronto(' + idx + ')">✅ PRONTO (fiz os pedidos)</button> ';
       }
       if (p.status === 'pronto') {
+        acoes += '<div class="tempo" style="color:#ffb400">⏳ Aguardando o cliente solicitar o código</div> ';
+      }
+      if (p.status === 'solicitado') {
+        acoes += '<div class="tempo" style="color:#ffb400">🔔 Cliente solicitou!</div> ';
+        acoes += '<button class="btn-codigos" onclick="abrirModalCodigos(' + idx + ')">🍳 Preparar + Códigos/Print</button> ';
+      }
+      if (p.status === 'codigos_enviados') {
         acoes += '<button class="btn-codigos" onclick="abrirModalCodigos(' + idx + ')">✏ Editar códigos</button> ';
         acoes += '<button class="btn-preparar" onclick="marcarEntregue(' + idx + ')">📦 Entregue</button> ';
       }
@@ -297,6 +303,7 @@
         '<td>' + itensTxt + '</td>' +
         '<td><b style="color:#4caf50">R$ ' + totalTxt + '</b></td>' +
         '<td><span class="badge ' + esc(p.status) + '">' + statusTxt + '</span>' +
+        (p.tipo ? '<div class="tempo">📍 ' + esc(p.tipo) + (p.consumo ? ' — ' + esc(p.consumo) : '') + '</div>' : '') +
         (p.tempoEspera ? '<div class="tempo">⏱ ' + esc(p.tempoEspera) + ' min</div>' : '') + codigosTxt + '</td>' +
         '<td class="acoes">' + acoes + '</td>';
       tbody.appendChild(tr);
@@ -322,13 +329,13 @@
     alert('💰 Pagamento confirmado!\n\nO cliente agora vê apenas: "Aguarde, seu pedido será entregue em ' + p.tempoEspera + ' minutos"');
   }
 
-  function marcarPreparar(idx) {
+  function marcarPronto(idx) {
     var p = pedidos[idx];
     if (!p) return;
-    if (p.status !== 'pago') { alert('⚠ Este pedido precisa estar como PAGO antes de preparar!\n\nStatus atual: ' + (p.status || 'desconhecido')); renderizarPedidos(); return; }
-    p.status = 'preparando';
+    if (p.status !== 'pago') { alert('⚠ Este pedido precisa estar como PAGO antes!\n\nStatus atual: ' + (p.status || 'desconhecido')); renderizarPedidos(); return; }
+    p.status = 'pronto';
     salvarPedidos();
-    alert('👨‍🍳 Pedido em preparação!\n\nQuando terminar, clique no botão verde "✅ PRONTO — Códigos/Print" para marcar como PRONTO e liberar os códigos para o cliente.');
+    alert('✅ Pedido marcado como PRONTO!\n\nO cliente agora pode clicar em "SOLICITAR CÓDIGO".\nQuando ele solicitar (estiver chegando), o pedido entra como 🔔 Solicitado — aí você prepara na cozinha e envia os códigos.');
   }
 
   /* ---------- Modal de códigos + print ---------- */
@@ -373,10 +380,10 @@
     }
     pedidos[idxModal].codigosApp = codigos;
     pedidos[idxModal].printApp = printBase64;
-    pedidos[idxModal].status = 'pronto';
+    pedidos[idxModal].status = 'codigos_enviados';
     salvarPedidos();
     fecharModal();
-    alert('✅ Pedido marcado como PRONTO!\n\nCódigos e print enviados — o cliente vê tudo na tela dele automaticamente.');
+    alert('🍳 Códigos enviados!\n\nO cliente recebe os códigos e prints na tela dele automaticamente.');
   }
 
   function marcarEntregue(idx) {
