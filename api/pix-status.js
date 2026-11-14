@@ -15,7 +15,7 @@ function chamarAPI(metodo, rota, token) {
         var json = null;
         try { json = JSON.parse(buf); } catch (e) {}
         if (res.statusCode >= 200 && res.statusCode < 300) resolve(json || {});
-        else reject(new Error('SyncPay HTTP ' + res.statusCode));
+        else reject(new Error('SyncPay HTTP ' + res.statusCode + (json && json.message ? ': ' + json.message : (buf ? ': ' + buf.substring(0, 200) : ''))));
       });
     });
     req.on('error', reject);
