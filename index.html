@@ -1192,10 +1192,10 @@
   function selecionarLoja(id) {
     lojaSelecionada = lojasMcDonalds.find(function(l){ return l.id === id; }) || null;
     if (lojaSelecionada) {
+      /* O campo de busca passa a exibir o nome da loja selecionada
+         (limpe o campo para ver a lista completa de novo) */
+      document.getElementById('buscaLoja').value = lojaSelecionada.nome;
       mostrarMensagem('✅ Loja selecionada: ' + lojaSelecionada.nome, 'ok');
-      /* Rola até o card selecionado ficar visível */
-      var card = document.querySelector('.loja-card.sel');
-      if (card && card.scrollIntoView) card.scrollIntoView({ block: 'nearest' });
     }
     renderizarLojas();
   }
