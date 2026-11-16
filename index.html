@@ -66,16 +66,21 @@
   /* Carrinho */
   .carrinho { background:#1e1e2a; border-radius:12px; padding:20px; margin-bottom:24px; box-shadow:0 4px 12px rgba(0,0,0,.4); display:none; }
   .carrinho h2 { color:#ffb400; font-size:1.1rem; margin-bottom:12px; }
-  .carrinho .linha { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #2c2c3a; font-size:.92rem; }
+  .carrinho .linha { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid #2c2c3a; }
+  .carrinho .linha img { width:52px; height:52px; object-fit:cover; border-radius:12px; background:#2c2c3a; flex-shrink:0; }
+  .carrinho .linha-info { flex:1; min-width:0; display:flex; flex-direction:column; gap:4px; }
+  .carrinho .linha .lnome { font-size:1rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .carrinho .linha .lunidade { font-size:.78rem; color:#888; }
+  .carrinho .linha-acoes { display:flex; justify-content:space-between; align-items:center; margin-top:2px; }
+  .carrinho .qtd-box { display:inline-flex; align-items:center; gap:2px; background:#12121a; border:1px solid #2c2c3a; border-radius:12px; padding:3px; }
+  .carrinho .qtd-box .qtd-num { min-width:30px; text-align:center; font-weight:800; font-size:.95rem; }
+  .carrinho .linha button.step { background:#2c2c3a; color:#ffb400; border:none; width:34px; height:34px; border-radius:10px; font-weight:800; cursor:pointer; font-size:1.15rem; flex-shrink:0; line-height:1; }
+  .carrinho .linha .lsub { font-size:1rem; white-space:nowrap; }
+  .carrinho .linha b { font-size:1rem; }
   .carrinho .total { display:flex; justify-content:space-between; padding-top:12px; font-size:1.2rem; font-weight:800; color:#4caf50; }
   .carrinho button.finalizar { width:100%; margin-top:16px; background:#4caf50; color:#fff; border:none; padding:14px; border-radius:8px; font-size:1.05rem; font-weight:700; cursor:pointer; }
   .carrinho button.finalizar:disabled { background:#444; cursor:not-allowed; }
   .carrinho .limpar { width:100%; margin-top:8px; background:none; border:none; color:#ff6b6b; cursor:pointer; font-size:.85rem; }
-  .carrinho .linha { display:flex; align-items:center; gap:10px; padding:6px 0; }
-  .carrinho .linha img { width:46px; height:46px; object-fit:cover; border-radius:10px; background:#2c2c3a; flex-shrink:0; }
-  .carrinho .linha .lnome { flex:1; min-width:0; font-size:1rem; font-weight:600; }
-  .carrinho .linha button.step { background:#2c2c3a; color:#ffb400; border:none; width:32px; height:32px; border-radius:10px; font-weight:800; cursor:pointer; font-size:1.15rem; flex-shrink:0; }
-  .carrinho .linha b { font-size:1rem; }
   .carrinho .linha.desconto span:last-child { color:#4caf50; font-weight:800; }
   .cupom-row { display:flex; gap:8px; margin-top:14px; }
   .cupom-row input { flex:1; padding:10px; border-radius:8px; border:1px solid #333; background:#12121a; color:#fff; text-transform:uppercase; letter-spacing:1px; }
@@ -83,15 +88,6 @@
   .cupom-aplicado { margin-top:10px; background:#122b12; border:1px solid #2e7d32; border-radius:8px; padding:10px 12px; display:flex; justify-content:space-between; align-items:center; font-size:.9rem; }
   .cupom-aplicado b { color:#4caf50; }
   .cupom-aplicado button { background:none; border:none; color:#ff6b6b; cursor:pointer; font-size:.8rem; }
-  .sugestoes { margin-top:16px; padding-top:14px; border-top:1px dashed #2c2c3a; }
-  .sugestoes .titulo-sug { color:#ffb400; font-size:.85rem; font-weight:800; margin-bottom:8px; }
-  .sug-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
-  .sug-card { background:#12121a; border:1px solid #2c2c3a; border-radius:10px; padding:6px; display:flex; align-items:center; gap:6px; height:52px; overflow:hidden; }
-  .sug-card img { width:40px; height:40px; object-fit:contain; border-radius:8px; background:#2c2c3a; padding:2px; flex-shrink:0; }
-  .sug-card .info { flex:1; min-width:0; }
-  .sug-card .info b { font-size:.62rem; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#ccc; }
-  .sug-card .info span { color:#4caf50; font-size:.6rem; font-weight:700; }
-  .sug-card button { background:linear-gradient(90deg,#ff5f00,#ffb400); color:#fff; border:none; width:24px; height:24px; border-radius:50%; font-weight:800; cursor:pointer; font-size:.85rem; line-height:1; flex-shrink:0; }
   .economia { text-align:center; color:#4caf50; font-size:.85rem; font-weight:700; margin-top:8px; }
 
   /* ====== Carrinho flutuante (estilo app de delivery) ====== */
@@ -125,22 +121,19 @@
       box-shadow:none; animation:abrirTela .2s ease-out;
     }
     #divCarrinho.sheet-aberto h2 { font-size:1.35rem; margin:18px 0 14px; }
+    /* itens proporcionais ao celular: foto menor, duas linhas, sem estourar */
     #divCarrinho.sheet-aberto .linha { padding:12px 0; gap:12px; border-bottom:1px solid #23232f; }
-    #divCarrinho.sheet-aberto .linha img { width:60px; height:60px; border-radius:12px; }
-    #divCarrinho.sheet-aberto .linha .lnome { font-size:1.1rem; }
-    #divCarrinho.sheet-aberto .linha button.step { width:38px; height:38px; font-size:1.3rem; }
-    #divCarrinho.sheet-aberto .linha b { font-size:1.1rem; }
+    #divCarrinho.sheet-aberto .linha img { width:clamp(48px, 14vw, 64px); height:clamp(48px, 14vw, 64px); border-radius:14px; }
+    #divCarrinho.sheet-aberto .linha .lnome { font-size:clamp(.95rem, 3.9vw, 1.15rem); }
+    #divCarrinho.sheet-aberto .linha .lunidade { font-size:clamp(.72rem, 3vw, .85rem); }
+    #divCarrinho.sheet-aberto .linha button.step { width:clamp(34px, 10vw, 42px); height:clamp(34px, 10vw, 42px); font-size:1.25rem; border-radius:12px; }
+    #divCarrinho.sheet-aberto .qtd-box { padding:4px; border-radius:14px; }
+    #divCarrinho.sheet-aberto .qtd-box .qtd-num { min-width:clamp(26px, 8vw, 34px); font-size:1rem; }
+    #divCarrinho.sheet-aberto .linha .lsub { font-size:clamp(1rem, 4vw, 1.15rem); }
     #divCarrinho.sheet-aberto .cupom-row { margin-top:20px; gap:10px; }
     #divCarrinho.sheet-aberto .cupom-row input { padding:14px; font-size:1rem; }
     #divCarrinho.sheet-aberto .cupom-row button { padding:14px 22px; font-size:1rem; }
     #divCarrinho.sheet-aberto .cupom-aplicado { margin-top:14px; padding:14px; font-size:1rem; }
-    #divCarrinho.sheet-aberto .sugestoes { margin-top:22px; padding-top:18px; }
-    #divCarrinho.sheet-aberto .sugestoes .titulo-sug { font-size:1rem; margin-bottom:10px; }
-    #divCarrinho.sheet-aberto .sug-card { height:60px; padding:8px; gap:8px; }
-    #divCarrinho.sheet-aberto .sug-card img { width:46px; height:46px; }
-    #divCarrinho.sheet-aberto .sug-card .info b { font-size:.75rem; }
-    #divCarrinho.sheet-aberto .sug-card .info span { font-size:.72rem; }
-    #divCarrinho.sheet-aberto .sug-card button { width:30px; height:30px; font-size:1rem; }
     #divCarrinho.sheet-aberto .total { padding:10px 0; font-size:1.15rem; }
     #divCarrinho.sheet-aberto .total span:last-child { font-size:1.15rem; }
     #divCarrinho.sheet-aberto .economia { font-size:1rem; margin-top:10px; }
@@ -248,7 +241,6 @@
       <div class="sheet-fechar"><button onclick="toggleCarrinho()">← Voltar e escolher mais itens</button></div>
       <h2>🛒 Seu carrinho</h2>
       <div id="listaCarrinho"></div>
-      <div id="sugestoes"></div>
       <div class="cupom-row">
         <input type="text" id="cupomInput" placeholder="🎟 Código de desconto" maxlength="20">
         <button onclick="aplicarCupom()">Aplicar</button>
@@ -523,67 +515,6 @@
     if (c) { c.usados = (c.usados || 0) + 1; localStorage.setItem('zyon_cupons', JSON.stringify(cupons)); }
   }
 
-  /* ---------- Sugestões inteligentes ---------- */
-  function sortear(arr) {
-    /* embaralha para as sugestões variarem a cada vez */
-    var a = arr.slice();
-    for (var i = a.length - 1; i > 0; i--) {
-      var j = Math.floor(Math.random() * (i + 1));
-      var t = a[i]; a[i] = a[j]; a[j] = t;
-    }
-    return a;
-  }
-
-  function categoriasNoCarrinho() {
-    var cats = {};
-    for (var id in carrinho) {
-      var it = cardapio.find(function(i){ return i.id === id; });
-      if (it) cats[it.categoria || 'Lanches'] = true;
-    }
-    return cats;
-  }
-
-  function renderizarSugestoes() {
-    var div = document.getElementById('sugestoes');
-    var idsNoCarrinho = Object.keys(carrinho);
-    if (idsNoCarrinho.length === 0) { div.innerHTML = ''; return; }
-
-    /* Lógica inteligente conforme o que já está no carrinho:
-       - Só lanches            -> oferece complementos (acompanhamentos) e sobremesas
-       - Já tem combo          -> oferece apenas sobremesas
-       - Já tem acompanhamento -> pula para sobremesas (não insiste)
-       - Já tem sobremesa      -> tenta completar com o que falta (combo/acompanhamento) */
-    var cats = categoriasNoCarrinho();
-    var prioridade = [];
-    if (cats['Sobremesas'] && !cats['Combos']) prioridade.push('Combos');
-    if (cats['Sobremesas'] && !cats['Acompanhamentos']) prioridade.push('Acompanhamentos');
-    if (!cats['Combos'] && !cats['Acompanhamentos']) prioridade.push('Acompanhamentos');
-    if (!cats['Sobremesas']) prioridade.push('Sobremesas');
-    if (prioridade.length === 0) { div.innerHTML = ''; return; }
-
-    /* Sugere itens das categorias em falta, fora do carrinho, sorteados */
-    var candidatas = [];
-    prioridade.forEach(function(cat) {
-      var daCat = sortear(cardapio.filter(function(item) {
-        return (item.categoria || 'Lanches') === cat && item.estoque > 0 && idsNoCarrinho.indexOf(item.id) < 0;
-      }));
-      candidatas = candidatas.concat(daCat);
-    });
-    var sug = candidatas.slice(0, 3);
-    if (sug.length === 0) { div.innerHTML = ''; return; }
-
-    var html = '<div class="titulo-sug">💡 Combina com seu pedido:</div><div class="sug-grid">';
-    sug.forEach(function(item) {
-      html += '<div class="sug-card">' +
-        '<img src="' + fotoSegura(item.foto) + '" alt="" onerror="this.style.visibility=\'hidden\'">' +
-        '<div class="info"><b>' + esc(item.nome) + '</b><span>R$ ' + item.preco_real.toFixed(2) + '</span></div>' +
-        '<button onclick="adicionarCarrinho(\'' + esc(item.id) + '\')" title="Adicionar ' + esc(item.nome) + '">+</button>' +
-        '</div>';
-    });
-    html += '</div>';
-    div.innerHTML = html;
-  }
-
   function atualizarCarrinho() {
     var div = document.getElementById('divCarrinho');
     var lista = document.getElementById('listaCarrinho');
@@ -594,13 +525,20 @@
       var subtotal = item.preco_real * carrinho[id];
       total += subtotal;
       totalUnidades += carrinho[id];
-      html += '<div class="linha"><img src="' + fotoSegura(item.foto) + '" alt="" onerror="this.style.visibility=\'hidden\'">' +
-              '<span class="lnome">' + esc(item.nome) + ' × ' + carrinho[id] + '</span>' +
-              '<span style="display:flex;align-items:center;gap:6px;flex-shrink:0">' +
-              '<button class="step" onclick="mudarQtd(\'' + esc(id) + '\',-1)" title="Menos 1">−</button>' +
-              '<b>R$ ' + subtotal.toFixed(2) + '</b>' +
-              '<button class="step" onclick="mudarQtd(\'' + esc(id) + '\',1)" title="Mais 1">+</button>' +
-              '</span></div>';
+      html += '<div class="linha">' +
+              '<img src="' + fotoSegura(item.foto) + '" alt="" onerror="this.style.visibility=\'hidden\'">' +
+              '<div class="linha-info">' +
+                '<span class="lnome">' + esc(item.nome) + '</span>' +
+                '<span class="lunidade">' + carrinho[id] + ' un • R$ ' + item.preco_real.toFixed(2) + ' cada</span>' +
+                '<div class="linha-acoes">' +
+                  '<span class="qtd-box">' +
+                  '<button class="step" onclick="mudarQtd(\'' + esc(id) + '\',-1)" title="Menos 1">−</button>' +
+                  '<span class="qtd-num">' + carrinho[id] + '</span>' +
+                  '<button class="step" onclick="mudarQtd(\'' + esc(id) + '\',1)" title="Mais 1">+</button>' +
+                  '</span>' +
+                  '<b class="lsub">R$ ' + subtotal.toFixed(2) + '</b>' +
+                '</div>' +
+              '</div></div>';
     }
     lista.innerHTML = html;
 
@@ -631,7 +569,6 @@
       ca.style.display = 'none';
     }
 
-    renderizarSugestoes();
     document.getElementById('btnFinalizar').disabled = (totalUnidades === 0);
     div.style.display = (totalUnidades > 0) ? 'block' : 'none';
     atualizarFlutuante(totalUnidades, totalFinal);
