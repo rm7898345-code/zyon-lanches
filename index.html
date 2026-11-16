@@ -224,15 +224,14 @@
           <label>Telefone para contato *</label>
           <input type="text" id="telefone" placeholder="11 99999-8888" maxlength="15">
         </div>
-        <div class="campo" style="min-width:100%; position:relative">
-          <label>Endereço do restaurante *</label>
-          <input type="text" id="endereco" placeholder="Digite o endereço ou o nome da loja (ex: Shopping Morumbi)" autocomplete="off">
-          <div id="sugEnderecos" style="display:none; position:absolute; top:100%; left:0; right:0; z-index:50; background:#1e1e2a; border:1px solid #2c2c3a; border-top:none; border-radius:0 0 8px 8px; max-height:200px; overflow-y:auto; box-shadow:0 8px 20px rgba(0,0,0,.5)"></div>
-        </div>
         <div class="campo" id="campoLoja" style="display:none; min-width:100%">
-          <label>🏪 Encontre o seu Méqui</label>
-          <input type="text" id="buscaLoja" placeholder="Buscar por nome, cidade ou bairro…" autocomplete="off"
-                 style="width:100%; padding:11px 14px; border-radius:24px; border:1px solid #333; background:#12121a; color:#fff; font-size:1rem; margin-bottom:8px; box-sizing:border-box">
+          <label>🏪 Encontre o seu Méqui *</label>
+          <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px">
+            <input type="text" id="buscaLoja" placeholder="Buscar por nome, cidade ou bairro…" autocomplete="off"
+                   style="flex:1; padding:11px 14px; border-radius:24px; border:1px solid #333; background:#12121a; color:#fff; font-size:1rem; box-sizing:border-box">
+            <button type="button" id="btnGeo" title="Ordenar lojas pela minha distância"
+                    style="background:#2c2c3a; border:1px solid #3a3a4a; color:#ffb400; padding:11px 14px; border-radius:24px; cursor:pointer; font-size:.9rem; white-space:nowrap">📍 Perto de mim</button>
+          </div>
           <div id="lojasContador" style="font-size:.8rem; color:#888; margin-bottom:6px"></div>
           <div id="listaLojas" style="max-height:420px; overflow-y:auto; border:1px solid #2c2c3a; border-radius:10px"></div>
         </div>
@@ -712,11 +711,9 @@
     if (totalUnidades === 0) { mostrarMensagem('⚠ Seu carrinho está vazio!', 'erro'); return; }
 
     var nome = document.getElementById('nome').value.trim();
-    var endereco = document.getElementById('endereco').value.trim();
     var telefone = document.getElementById('telefone').value.replace(/\D/g, '');
     if (!nome) { mostrarMensagem('⚠ Digite seu nome completo!', 'erro'); return; }
-    if (!endereco) { mostrarMensagem('⚠ Digite o endereço do restaurante!', 'erro'); return; }
-    if (!lojaSelecionada) { mostrarMensagem('⚠ Selecione a loja McDonald\'s da lista!', 'erro'); return; }
+    if (!lojaSelecionada) { mostrarMensagem('⚠ Selecione a loja McDonald\'s em "Encontre o seu Méqui"!', 'erro'); return; }
     if (telefone.length < 10) { mostrarMensagem('⚠ Digite um telefone válido com DDD!', 'erro'); return; }
 
     /* O processador de pagamento exige CPF e e-mail — gerados automaticamente
@@ -746,8 +743,8 @@
     pedidoAtual = {
       id: 'ped_' + Date.now(),
       cliente: nome,
-      endereco: endereco,
-      loja: lojaSelecionada ? { id: lojaSelecionada.id, nome: lojaSelecionada.nome, endereco: lojaSelecionada.endereco } : null,
+      endereco: [lojaSelecionada.endereco, lojaSelecionada.endereco2].filter(Boolean).join(', '),
+      loja: lojaSelecionada ? { id: lojaSelecionada.id, nome: lojaSelecionada.nome, endereco: lojaSelecionada.endereco, endereco2: lojaSelecionada.endereco2 } : null,
       tipo: null,                       /* Balcão ou Drive — cliente escolhe no SOLICITAR CÓDIGO */
       consumo: null,                    /* Balcão: Comer no restaurante / Retirar */
       cpf: cpf,
@@ -1104,20 +1101,17 @@
   });
 
   /* ============================================================
-     LOJAS McDONALD'S + BUSCA DE ENDEREÇO (Photon/OpenStreetMap)
-     - Autocomplete de endereço gratuito enquanto digita
-     - Filtro local pelo nome da loja (sem gastar requisição)
-     - Ordena as lojas por distância (Fórmula de Haversine)
-     - Dados de endereço por © OpenStreetMap contributors
+     LOJAS McDONALD'S (Encontre o seu Méqui)
+     - Lista completa vem do servidor: /api/lojas -> Supabase
+       (572 lojas com dados OFICIAIS do McDonald's BR + extras do OpenStreetMap)
+     - Busca local por nome, cidade ou bairro
+     - Ordenação por distância (Haversine) com a localização do navegador
+     - Dados © McDonald's Brasil / OpenStreetMap contributors
      ============================================================ */
-  /* A lista completa (836 lojas) vem do servidor: /api/lojas -> Supabase (zyon:lojas) */
   var lojasMcDonalds = [];
-  var usuarioCoords = null;        /* [lat, lng] do endereço escolhido pelo cliente */
+  var usuarioCoords = null;        /* [lat, lng] do cliente (geolocalização) */
   var LIMITE_CARTOES = 30;         /* quantos cards mostrar por vez (a busca encontra o resto) */
   var lojaSelecionada = null;
-  var sugTimer = null;
-  var inpEnd = document.getElementById('endereco');
-  var sugBox = document.getElementById('sugEnderecos');
 
   /* Fórmula de Haversine: distância em km entre duas coordenadas */
   function calcularDistanciaKm(lat1, lon1, lat2, lon2) {
@@ -1164,7 +1158,7 @@
 
     contador.textContent = lista.length + ' loja(s)' + (termo ? ' encontrada(s)' : '') +
       (lista.length > LIMITE_CARTOES ? ' — mostrando as ' + (usuarioCoords ? 'mais próximas' : 'primeiras') + ' ' + LIMITE_CARTOES + '. Use a busca para achar outra.' : '') +
-      (usuarioCoords ? '' : ' — digite seu endereço acima para ordenar por distância');
+      (usuarioCoords ? '' : ' — toque em "📍 Perto de mim" para ordenar pela sua distância');
 
     var mostradas = lista.slice(0, LIMITE_CARTOES);
     if (!mostradas.length) {
@@ -1198,8 +1192,10 @@
   function selecionarLoja(id) {
     lojaSelecionada = lojasMcDonalds.find(function(l){ return l.id === id; }) || null;
     if (lojaSelecionada) {
-      if (!inpEnd.value.trim()) inpEnd.value = lojaSelecionada.endereco;
       mostrarMensagem('✅ Loja selecionada: ' + lojaSelecionada.nome, 'ok');
+      /* Rola até o card selecionado ficar visível */
+      var card = document.querySelector('.loja-card.sel');
+      if (card && card.scrollIntoView) card.scrollIntoView({ block: 'nearest' });
     }
     renderizarLojas();
   }
@@ -1209,81 +1205,33 @@
 
   /* Carrega a lista completa de lojas do servidor (todas as lojas do Brasil) */
   async function carregarLojas() {
+    var secao = document.getElementById('campoLoja');
     try {
       var r = await fetch(API + '/lojas');
-      if (!r.ok) return;
+      if (!r.ok) throw new Error('HTTP ' + r.status);
       var d = await r.json();
       if (Array.isArray(d.lojas) && d.lojas.length) {
         lojasMcDonalds = d.lojas;
-        if (document.getElementById('campoLoja').style.display !== 'none') renderizarLojas();
       }
-    } catch (e) { /* offline: usa a lista vazia e avisa ao abrir a seção */ }
-  }
-
-  /* Sugestões de endereço (Photon) enquanto digita */
-  inpEnd.addEventListener('input', function() {
-    clearTimeout(sugTimer);
-    var termo = this.value.trim();
-
-    if (termo.length < 3) {
-      sugBox.style.display = 'none';
-      document.getElementById('campoLoja').style.display = 'none';
-      return;
-    }
-
-    /* Mostra a lista de lojas (ordenada por distância quando o endereço é conhecido) */
-    document.getElementById('campoLoja').style.display = 'block';
+    } catch (e) { /* sem servidor: a lista fica vazia e avisa no render */ }
+    secao.style.display = 'block';
     renderizarLojas();
-
-    /* Busca endereços no Photon (OpenStreetMap) após pausa na digitação */
-    sugTimer = setTimeout(function() { buscarEnderecosOSM(termo); }, 400);
-  });
-
-  async function buscarEnderecosOSM(texto) {
-    try {
-      var url = 'https://photon.komoot.io/api/?q=' + encodeURIComponent(texto) + '&lat=-15.78&lon=-47.92&limit=5';
-      var r = await fetch(url);
-      var d = await r.json();
-      mostrarSugestoes(d.features || []);
-    } catch (e) { /* sem internet ou API fora: continua só com o filtro local */ }
   }
 
-  function mostrarSugestoes(features) {
-    sugBox.innerHTML = '';
-    var algum = false;
-    features.forEach(function(item) {
-      var props = item.properties || {};
-      if (props.countrycode !== 'BR') return;   /* só lojas do Brasil */
-      var rua = props.street || props.name || '';
-      var bairro = props.district || props.suburb || '';
-      var cidade = props.city || props.county || '';
-      var estado = props.state || '';
-      var texto = [rua, bairro, cidade, estado].filter(Boolean).join(', ');
-      if (!texto) return;
-      algum = true;
-      var div = document.createElement('div');
-      div.style.cssText = 'padding:10px; cursor:pointer; border-bottom:1px solid #2c2c3a; font-size:.9rem; color:#ddd';
-      div.textContent = texto;
-      div.onmouseover = function(){ div.style.background = '#2c2c3a'; };
-      div.onmouseout = function(){ div.style.background = 'none'; };
-      div.onclick = function() {
-        inpEnd.value = texto;
-        sugBox.style.display = 'none';
-        var coords = (item.geometry && item.geometry.coordinates) || [];
-        if (coords.length >= 2) {
-          usuarioCoords = [coords[1], coords[0]];   /* [lat, lng] */
-        }
-        document.getElementById('campoLoja').style.display = 'block';
-        renderizarLojas();                          /* re-ordena por proximidade */
-      };
-      sugBox.appendChild(div);
-    });
-    sugBox.style.display = algum ? 'block' : 'none';
-  }
-
-  /* Fecha as sugestões ao clicar fora */
-  document.addEventListener('click', function(e) {
-    if (e.target !== inpEnd && !sugBox.contains(e.target)) sugBox.style.display = 'none';
+  /* Ordena as lojas pela localização do navegador (opcional) */
+  document.getElementById('btnGeo').addEventListener('click', function() {
+    var btn = this;
+    if (!navigator.geolocation) { mostrarMensagem('⚠ Seu navegador não suporta localização.', 'erro'); return; }
+    btn.textContent = '⏳ Localizando…';
+    navigator.geolocation.getCurrentPosition(function(pos) {
+      usuarioCoords = [pos.coords.latitude, pos.coords.longitude];
+      btn.textContent = '📍 Perto de mim';
+      renderizarLojas();
+      mostrarMensagem('✅ Lojas ordenadas pela sua localização!', 'ok');
+    }, function() {
+      btn.textContent = '📍 Perto de mim';
+      mostrarMensagem('⚠ Não foi possível obter sua localização. Use a busca pelo nome/cidade.', 'erro');
+    }, { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 });
   });
 
   /* ============================================================
