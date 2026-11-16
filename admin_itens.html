@@ -334,11 +334,13 @@
           config: { chavePix: cfg.chavePix || '', nomePix: cfg.nomePix || '', cidadePix: cfg.cidadePix || '' }
         })
       });
-      var d = await r.json();
+      var d = {};
+      try { d = await r.json(); } catch (e2) { /* resposta não-JSON */ }
       if (d.ok) console.log('✔ Salvo no servidor');
-      else alert('⚠ O servidor recusou: ' + (d.error || 'erro desconhecido'));
+      else alert('⚠ O servidor recusou (HTTP ' + r.status + '): ' + (d.error || 'resposta inválida'));
     } catch (e) {
-      alert('⚠ Não foi possível salvar no servidor (sem banco configurado?). Os dados ficaram só neste navegador.\n\n' + e.message);
+      alert('⚠ Falha de rede ao salvar no servidor.\n\nDetalhe: ' + e.message +
+        '\n\nDica: confira se o endereço é https://zyon-lanchess.vercel.app e tente novamente.');
     }
   }
 
