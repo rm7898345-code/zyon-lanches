@@ -125,6 +125,13 @@ var server = http.createServer(async function(req, res) {
     if (url === '/api/ping') {
       return responder(res, 200, 'application/json', JSON.stringify({ ok: true, syncConfigurada: !!lerConfig().clientId, bancoConfigurado: store.configurado() }));
 
+    } else if (url === '/api/lojas' && req.method === 'GET') {
+      if (!store.configurado()) return responder(res, 503, 'application/json', JSON.stringify({ error: 'Banco de dados não configurado' }));
+      var lojasBrutas = await store.pegar('zyon:lojas');
+      var lojasLista = [];
+      try { lojasLista = JSON.parse(lojasBrutas || '[]'); } catch (e) {}
+      return responder(res, 200, 'application/json', JSON.stringify({ ok: true, lojas: lojasLista }));
+
     } else if (url === '/api/cardapio' && req.method === 'GET') {
       if (!store.configurado()) return responder(res, 503, 'application/json', JSON.stringify({ error: 'Banco de dados não configurado (.env.local: SUPABASE_URL / SUPABASE_SERVICE_KEY)' }));
       var partes = await Promise.all([store.pegar('zyon:cardapio'), store.pegar('zyon:cupons'), store.pegar('zyon:config')]);

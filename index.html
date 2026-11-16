@@ -27,6 +27,20 @@
   .dados input, .dados select { padding:10px; border-radius:8px; border:1px solid #333; background:#12121a; color:#fff; font-size:1rem; }
   .dados input:focus, .dados select:focus { outline:2px solid #ff5f00; }
 
+  /* Cards de loja (estilo "Encontre o seu Méqui") */
+  .loja-card { display:flex; gap:10px; align-items:center; padding:12px; border-bottom:1px solid #2c2c3a; background:#16161f; transition:background .15s; }
+  .loja-card:last-child { border-bottom:none; }
+  .loja-card:hover { background:#1e1e2a; }
+  .loja-card.sel { background:#22231a; box-shadow:inset 3px 0 0 #ffb400; }
+  .loja-info { flex:1; min-width:0; }
+  .loja-nome { font-weight:700; color:#fff; font-size:.95rem; margin-bottom:3px; }
+  .loja-card.sel .loja-nome { color:#ffb400; }
+  .loja-end { color:#aaa; font-size:.8rem; text-transform:uppercase; }
+  .loja-dist { color:#ffb400; font-size:.8rem; margin-top:3px; }
+  .loja-btn { background:#ffb400; color:#1a1a10; border:none; padding:9px 18px; border-radius:8px; font-weight:700; cursor:pointer; font-size:.85rem; white-space:nowrap; }
+  .loja-btn:hover { background:#ffc72c; }
+  .loja-btn.sel { background:#2c2c3a; color:#ffb400; cursor:default; }
+
   /* Cardápio */
   .cardapio h2 { color:#ffb400; margin:10px 0 16px; font-size:1.2rem; }
   .tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px; }
@@ -216,10 +230,11 @@
           <div id="sugEnderecos" style="display:none; position:absolute; top:100%; left:0; right:0; z-index:50; background:#1e1e2a; border:1px solid #2c2c3a; border-top:none; border-radius:0 0 8px 8px; max-height:200px; overflow-y:auto; box-shadow:0 8px 20px rgba(0,0,0,.5)"></div>
         </div>
         <div class="campo" id="campoLoja" style="display:none; min-width:100%">
-          <label>🏪 Loja McDonald's mais próximas *</label>
-          <select id="lojaSelect" style="padding:10px; border-radius:8px; border:1px solid #333; background:#12121a; color:#fff; font-size:1rem">
-            <option value="">Selecione a loja...</option>
-          </select>
+          <label>🏪 Encontre o seu Méqui</label>
+          <input type="text" id="buscaLoja" placeholder="Buscar por nome, cidade ou bairro…" autocomplete="off"
+                 style="width:100%; padding:11px 14px; border-radius:24px; border:1px solid #333; background:#12121a; color:#fff; font-size:1rem; margin-bottom:8px; box-sizing:border-box">
+          <div id="lojasContador" style="font-size:.8rem; color:#888; margin-bottom:6px"></div>
+          <div id="listaLojas" style="max-height:420px; overflow-y:auto; border:1px solid #2c2c3a; border-radius:10px"></div>
         </div>
       </div>
       <div style="display:none">
@@ -1095,20 +1110,10 @@
      - Ordena as lojas por distância (Fórmula de Haversine)
      - Dados de endereço por © OpenStreetMap contributors
      ============================================================ */
-  var lojasMcDonalds = [
-    { id: 'sp-001', nome: 'McDonald\'s — Avenida Paulista', endereco: 'Av. Paulista, 1811 - Bela Vista, São Paulo - SP', lat: -23.5605, lng: -46.6575 },
-    { id: 'sp-002', nome: 'McDonald\'s — Shopping Eldorado', endereco: 'Av. Rebouças, 3970 - Pinheiros, São Paulo - SP', lat: -23.5724, lng: -46.6959 },
-    { id: 'sp-003', nome: 'McDonald\'s — Shopping Morumbi', endereco: 'Av. Roque Petroni Júnior, 1089 - Morumbi, São Paulo - SP', lat: -23.6221, lng: -46.6972 },
-    { id: 'rj-001', nome: 'McDonald\'s — Barra Shopping', endereco: 'Av. das Américas, 4666 - Barra da Tijuca, Rio de Janeiro - RJ', lat: -22.9994, lng: -43.3661 },
-    { id: 'rj-002', nome: 'McDonald\'s — Copacabana', endereco: 'Av. Atlântica, 2000 - Copacabana, Rio de Janeiro - RJ', lat: -22.9711, lng: -43.1857 },
-    { id: 'bs-001', nome: 'McDonald\'s — Asa Sul', endereco: 'Asa Sul, Quadra 1 - Brasília - DF', lat: -15.7939, lng: -47.8826 },
-    { id: 'sl-001', nome: 'McDonald\'s — Shopping da Bahia', endereco: 'Av. Tancredo Neves, 3133 - Caminho das Árvores, Salvador - BA', lat: -12.9772, lng: -38.5014 },
-    { id: 'fc-001', nome: 'McDonald\'s — Praia de Iracema', endereco: 'Av. Padre Leonel Franca, Fortaleza - CE', lat: -3.7319, lng: -38.5263 },
-    { id: 'bh-001', nome: 'McDonald\'s — Shopping BH', endereco: 'Av. Afonso Pena, 2912 - Belo Horizonte - MG', lat: -19.9167, lng: -43.9345 },
-    { id: 'pa-001', nome: 'McDonald\'s — Castelo', endereco: 'R. João Neivinha, 406 - Porto Alegre - RS', lat: -30.0361, lng: -51.2177 },
-    { id: 'ct-001', nome: 'McDonald\'s — Centro', endereco: 'R. XV de Novembro - Curitiba - PR', lat: -25.4284, lng: -49.2735 },
-    { id: 'rc-001', nome: 'McDonald\'s — Boa Viagem', endereco: 'Av. Boa Viagem - Recife - PE', lat: -8.0566, lng: -34.9027 }
-  ];
+  /* A lista completa (836 lojas) vem do servidor: /api/lojas -> Supabase (zyon:lojas) */
+  var lojasMcDonalds = [];
+  var usuarioCoords = null;        /* [lat, lng] do endereço escolhido pelo cliente */
+  var LIMITE_CARTOES = 30;         /* quantos cards mostrar por vez (a busca encontra o resto) */
   var lojaSelecionada = null;
   var sugTimer = null;
   var inpEnd = document.getElementById('endereco');
@@ -1126,35 +1131,94 @@
     return R * c;
   }
 
-  /* Preenche o select de lojas (opcionalmente filtrado e ordenado por distância) */
-  function preencherLojas(lista, latUser, lngUser) {
-    var sel = document.getElementById('lojaSelect');
-    lista = lista || lojasMcDonalds;
-    if (latUser !== null && latUser !== undefined) {
-      lista = lista.slice().sort(function(a, b) {
-        return calcularDistanciaKm(latUser, lngUser, a.lat, a.lng) - calcularDistanciaKm(latUser, lngUser, b.lat, b.lng);
+  /* Renderiza os cards de loja: nome, endereço, distância e botão Selecionar.
+     Ordena por distância quando o endereço do cliente é conhecido (usuarioCoords). */
+  function renderizarLojas() {
+    var box = document.getElementById('listaLojas');
+    var contador = document.getElementById('lojasContador');
+    if (!box) return;
+
+    if (!lojasMcDonalds.length) {
+      box.innerHTML = '<div style="padding:14px; color:#888; font-size:.9rem">📍 Carregando lojas…</div>';
+      contador.textContent = '';
+      return;
+    }
+
+    var termo = (document.getElementById('buscaLoja').value || '').trim().toLowerCase();
+
+    var lista = lojasMcDonalds.slice();
+    if (usuarioCoords) {
+      lista.sort(function(a, b) {
+        return calcularDistanciaKm(usuarioCoords[0], usuarioCoords[1], a.lat, a.lng) -
+               calcularDistanciaKm(usuarioCoords[0], usuarioCoords[1], b.lat, b.lng);
+      });
+    } else {
+      lista.sort(function(a, b){ return a.nome.localeCompare(b.nome, 'pt-BR'); });
+    }
+    if (termo) {
+      lista = lista.filter(function(l) {
+        return (l.nome + ' ' + (l.endereco || '') + ' ' + (l.endereco2 || '') + ' ' + (l.cidade || ''))
+          .toLowerCase().indexOf(termo) >= 0;
       });
     }
-    sel.innerHTML = '<option value="">Selecione a loja...</option>';
-    lista.forEach(function(l) {
-      var opt = document.createElement('option');
-      var dist = (latUser !== null && latUser !== undefined) ? ' • a ' + calcularDistanciaKm(latUser, lngUser, l.lat, l.lng).toFixed(1) + ' km' : '';
-      opt.value = l.id;
-      opt.textContent = l.nome + dist;
-      opt.title = l.endereco;
-      sel.appendChild(opt);
+
+    contador.textContent = lista.length + ' loja(s)' + (termo ? ' encontrada(s)' : '') +
+      (lista.length > LIMITE_CARTOES ? ' — mostrando as ' + (usuarioCoords ? 'mais próximas' : 'primeiras') + ' ' + LIMITE_CARTOES + '. Use a busca para achar outra.' : '') +
+      (usuarioCoords ? '' : ' — digite seu endereço acima para ordenar por distância');
+
+    var mostradas = lista.slice(0, LIMITE_CARTOES);
+    if (!mostradas.length) {
+      box.innerHTML = '<div style="padding:14px; color:#888; font-size:.9rem">Nenhuma loja encontrada com esse termo.</div>';
+      return;
+    }
+
+    var html = '';
+    mostradas.forEach(function(l, i) {
+      var dist = usuarioCoords ? calcularDistanciaKm(usuarioCoords[0], usuarioCoords[1], l.lat, l.lng) : null;
+      var distTxt = dist === null ? '' : (dist < 1 ? Math.round(dist * 1000) + ' m' : dist.toFixed(1) + ' km');
+      var sel = lojaSelecionada && lojaSelecionada.id === l.id;
+      html += '<div class="loja-card' + (sel ? ' sel' : '') + '">' +
+        '<div class="loja-info">' +
+          '<div class="loja-nome">' + (l.drive ? '🚗 ' : '') + esc(l.nome) + '</div>' +
+          '<div class="loja-end">' + esc(l.endereco || '') + '</div>' +
+          (l.endereco2 ? '<div class="loja-end">' + esc(l.endereco2) + '</div>' : '') +
+          (distTxt ? '<div class="loja-dist">📍 a ' + distTxt + '</div>' : '') +
+        '</div>' +
+        '<button type="button" class="loja-btn' + (sel ? ' sel' : '') + '" data-id="' + l.id + '">' + (sel ? '✓ Selecionada' : 'Selecionar') + '</button>' +
+      '</div>';
     });
-    document.getElementById('campoLoja').style.display = 'block';
+    box.innerHTML = html;
+
+    /* Liga os botões Selecionar */
+    Array.prototype.forEach.call(box.querySelectorAll('.loja-btn'), function(btn) {
+      btn.addEventListener('click', function() { selecionarLoja(btn.getAttribute('data-id')); });
+    });
   }
 
-  document.getElementById('lojaSelect').addEventListener('change', function() {
-    var v = this.value;
-    lojaSelecionada = lojasMcDonalds.find(function(l){ return l.id === v; }) || null;
+  function selecionarLoja(id) {
+    lojaSelecionada = lojasMcDonalds.find(function(l){ return l.id === id; }) || null;
     if (lojaSelecionada) {
       if (!inpEnd.value.trim()) inpEnd.value = lojaSelecionada.endereco;
       mostrarMensagem('✅ Loja selecionada: ' + lojaSelecionada.nome, 'ok');
     }
-  });
+    renderizarLojas();
+  }
+
+  /* Busca dentro da lista de lojas (nome, cidade, bairro) */
+  document.getElementById('buscaLoja').addEventListener('input', function() { renderizarLojas(); });
+
+  /* Carrega a lista completa de lojas do servidor (todas as lojas do Brasil) */
+  async function carregarLojas() {
+    try {
+      var r = await fetch(API + '/lojas');
+      if (!r.ok) return;
+      var d = await r.json();
+      if (Array.isArray(d.lojas) && d.lojas.length) {
+        lojasMcDonalds = d.lojas;
+        if (document.getElementById('campoLoja').style.display !== 'none') renderizarLojas();
+      }
+    } catch (e) { /* offline: usa a lista vazia e avisa ao abrir a seção */ }
+  }
 
   /* Sugestões de endereço (Photon) enquanto digita */
   inpEnd.addEventListener('input', function() {
@@ -1167,19 +1231,17 @@
       return;
     }
 
-    /* 1. Filtro imediato pelo nome da loja na lista local */
-    var filtroNome = lojasMcDonalds.filter(function(l) {
-      return (l.nome + ' ' + l.endereco).toLowerCase().indexOf(termo.toLowerCase()) >= 0;
-    });
-    preencherLojas(filtroNome.length ? filtroNome : null);
+    /* Mostra a lista de lojas (ordenada por distância quando o endereço é conhecido) */
+    document.getElementById('campoLoja').style.display = 'block';
+    renderizarLojas();
 
-    /* 2. Busca endereços no Photon (OpenStreetMap) após pausa na digitação */
+    /* Busca endereços no Photon (OpenStreetMap) após pausa na digitação */
     sugTimer = setTimeout(function() { buscarEnderecosOSM(termo); }, 400);
   });
 
   async function buscarEnderecosOSM(texto) {
     try {
-      var url = 'https://photon.komoot.io/api/?q=' + encodeURIComponent(texto) + '&lat=-15.78&lon=-47.92&limit=5&lang=pt';
+      var url = 'https://photon.komoot.io/api/?q=' + encodeURIComponent(texto) + '&lat=-15.78&lon=-47.92&limit=5';
       var r = await fetch(url);
       var d = await r.json();
       mostrarSugestoes(d.features || []);
@@ -1208,8 +1270,11 @@
         inpEnd.value = texto;
         sugBox.style.display = 'none';
         var coords = (item.geometry && item.geometry.coordinates) || [];
-        var lngUser = coords[0], latUser = coords[1];
-        preencherLojas(null, latUser, lngUser);   /* ordena por proximidade */
+        if (coords.length >= 2) {
+          usuarioCoords = [coords[1], coords[0]];   /* [lat, lng] */
+        }
+        document.getElementById('campoLoja').style.display = 'block';
+        renderizarLojas();                          /* re-ordena por proximidade */
       };
       sugBox.appendChild(div);
     });
@@ -1255,6 +1320,7 @@
   renderizarCardapio();
   renderizarMeusPedidos();
   carregarDadosServidor();
+  carregarLojas();
 </script>
   <button id="btnCarrinhoFlutuante" onclick="toggleCarrinho()"></button>
   <div id="fundoCarrinho" onclick="toggleCarrinho()"></div>
