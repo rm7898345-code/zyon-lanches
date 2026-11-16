@@ -603,20 +603,50 @@
   var alvoObs = document.getElementById('divCarrinho');
   if (alvoObs) observadorCarrinho.observe(alvoObs);
 
+  /* Trava/destrava o scroll da página de fundo (iOS Safari ignora overflow:hidden sozinho) */
+  var scrollAnterior = 0;
+  function travarFundo() {
+    scrollAnterior = window.scrollY || window.pageYOffset || 0;
+    document.body.style.position = 'fixed';
+    document.body.style.top = (-scrollAnterior) + 'px';
+    document.body.style.left = '0';
+    document.body.style.right = '0';
+    document.body.style.width = '100%';
+  }
+  function destravarFundo() {
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.left = '';
+    document.body.style.right = '';
+    document.body.style.width = '';
+    window.scrollTo(0, scrollAnterior);
+  }
+  /* Fecha o carrinho em tela cheia, se estiver aberto */
+  function fecharSheet() {
+    if (!sheetAberto) return;
+    sheetAberto = false;
+    var cart = document.getElementById('divCarrinho');
+    cart.classList.remove('sheet-aberto');
+    document.getElementById('fundoCarrinho').style.display = 'none';
+    destravarFundo();
+  }
+
   function toggleCarrinho() {
     var cart = document.getElementById('divCarrinho');
     var fundo = document.getElementById('fundoCarrinho');
     var btn = document.getElementById('btnCarrinhoFlutuante');
     sheetAberto = !sheetAberto;
     if (sheetAberto) {
+      if (Object.keys(carrinho).length === 0) { sheetAberto = false; mostrarMensagem('⚠ Seu carrinho está vazio!', 'erro'); return; }
       cart.classList.add('sheet-aberto');
       fundo.style.display = 'block';
       btn.style.display = 'none';
-      if (Object.keys(carrinho).length === 0) { sheetAberto = false; cart.classList.remove('sheet-aberto'); fundo.style.display = 'none'; mostrarMensagem('⚠ Seu carrinho está vazio!', 'erro'); return; }
+      travarFundo();
       cart.scrollTop = 0;
     } else {
       cart.classList.remove('sheet-aberto');
       fundo.style.display = 'none';
+      destravarFundo();
       atualizarCarrinho();
     }
   }
@@ -705,6 +735,7 @@
     registrarUsoCupom();
     cupomAtivo = null;
     atualizarCarrinho();
+    fecharSheet();          /* fecha o carrinho em tela cheia e destrava o fundo */
     mostrarTelaPagamento();
   }
 
