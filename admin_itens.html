@@ -96,6 +96,7 @@
       if (!hashSalvo) {
         if (senha.length < 8) return { ok:false, msg:'⚠ Crie uma senha com pelo menos 8 caracteres!' };
         localStorage.setItem(HASH_KEY, hash);
+        sessionStorage.setItem('zyon_admin_senha', senha);
         abrirSessao();
         return { ok:true, msg:'✅ Senha criada! Guarde-a bem — é ela que protege o painel.' };
       }
@@ -112,6 +113,7 @@
       }
 
       localStorage.setItem(TENT_KEY, '0');
+      sessionStorage.setItem('zyon_admin_senha', senha);
       abrirSessao();
       return { ok:true, msg:'' };
     }
@@ -247,6 +249,10 @@
         <input type="number" id="preco" step="0.01" min="0" placeholder='Ex: "25.00"'>
       </div>
       <div class="campo">
+        <label>Preço no app McDonald's (R$, opcional)</label>
+        <input type="number" id="precoApp" step="0.01" min="0" placeholder='Ex: "32.90" — para calcular a economia'>
+      </div>
+      <div class="campo">
         <label>Estoque</label>
         <input type="number" id="estoque" step="1" min="0" value="999">
       </div>
@@ -305,9 +311,58 @@
 <script>
   var itens = lerLS('zyon_itens', '[]');
   var fotoBase64 = null;
+  var API = (location.protocol === 'file:') ? 'http://localhost:3000/api' : '/api';
+
+  /* ============================================================
+     SINCRONIZAÇÃO COM O SERVIDOR (Upstash Redis)
+     - Ao abrir: busca cardápio/cupons/config do servidor
+     - Ao salvar: envia tudo para o servidor (POST /api/cardapio)
+     Assim qualquer dispositivo (celular, PC, anônimo) vê o mesmo cardápio.
+     ============================================================ */
+  async function enviarParaServidor() {
+    var senha = sessionStorage.getItem('zyon_admin_senha');
+    if (!senha) { alert('⚠ Faça login no painel para salvar no servidor.'); return; }
+    var cfg = lerLS('zyon_config', '{}');
+    try {
+      var r = await fetch(API + '/cardapio', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          senha: senha,
+          cardapio: itens,
+          cupons: lerLS('zyon_cupons', '[]'),
+          config: { chavePix: cfg.chavePix || '', nomePix: cfg.nomePix || '', cidadePix: cfg.cidadePix || '' }
+        })
+      });
+      var d = await r.json();
+      if (d.ok) console.log('✔ Salvo no servidor');
+      else alert('⚠ O servidor recusou: ' + (d.error || 'erro desconhecido'));
+    } catch (e) {
+      alert('⚠ Não foi possível salvar no servidor (sem banco configurado?). Os dados ficaram só neste navegador.\n\n' + e.message);
+    }
+  }
 
   /* ---------- Config Pix ---------- */
-  function carregarConfig() {
+  async function carregarConfig() {
+    /* Busca os dados do servidor (cardápio + cupons + config Pix) */
+    try {
+      var r = await fetch(API + '/cardapio');
+      if (r.ok) {
+        var d = await r.json();
+        if (Array.isArray(d.cardapio) && d.cardapio.length) {
+          itens = d.cardapio;
+          localStorage.setItem('zyon_itens', JSON.stringify(itens));
+          localStorage.setItem('zyon_cardapio', JSON.stringify(itens));
+        }
+        if (Array.isArray(d.cupons)) localStorage.setItem('zyon_cupons', JSON.stringify(d.cupons));
+        if (d.config && typeof d.config === 'object') {
+          localStorage.setItem('zyon_config', JSON.stringify(d.config));
+          if (d.config.chavePix) document.getElementById('cfgChave').value = d.config.chavePix;
+          if (d.config.nomePix) document.getElementById('cfgNome').value = d.config.nomePix;
+          if (d.config.cidadePix) document.getElementById('cfgCidade').value = d.config.cidadePix;
+        }
+      }
+    } catch (e) { /* servidor offline: segue com a cópia local */ }
     var cfg = lerLS('zyon_config', '{}');
     if (cfg.clientId) document.getElementById('cfgClientId').value = cfg.clientId;
     if (cfg.clientSecret) document.getElementById('cfgSecret').value = cfg.clientSecret;
@@ -348,6 +403,7 @@
     }
 
     document.getElementById('okConfig').style.display = 'block';
+    enviarParaServidor();
   }
 
   /* ---------- Foto ---------- */
@@ -451,6 +507,7 @@
     localStorage.setItem('zyon_itens', JSON.stringify(itens));
     localStorage.setItem('zyon_cardapio', JSON.stringify(itens));
     renderizarItens();
+    enviarParaServidor();
   }
 
   function renderizarItens() {
@@ -553,7 +610,7 @@
     var file = input.files[0];
     if (!file) return;
     var reader = new FileReader();
-    reader.onload = function(e) {
+    reader.onload = async function(e) {
       var dados;
       try { dados = JSON.parse(e.target.result); }
       catch (err) { alert('⚠ Arquivo inválido!'); return; }
@@ -562,7 +619,12 @@
       CHAVES_BACKUP.forEach(function(k) {
         if (dados[k] !== undefined) localStorage.setItem(k, dados[k]);
       });
-      alert('✅ Dados restaurados com sucesso! A página vai recarregar.');
+      /* Recarrega em memória e envia ao servidor (Supabase):
+         assim o cardápio importado aparece em TODOS os dispositivos */
+      itens = lerLS('zyon_itens', '[]');
+      alert('✅ Dados restaurados! Enviando ao servidor…');
+      await enviarParaServidor();
+      alert('✅ Importado e salvo no servidor! A página vai recarregar.');
       location.reload();
     };
     reader.readAsText(file);
@@ -599,6 +661,7 @@
     document.getElementById('cpMaxUsos').value = '100';
     renderizarCupons();
     alert('✅ Cupom ' + codigo + ' criado! (' + desconto + '% OFF)');
+    enviarParaServidor();
   }
 
   function renderizarCupons() {
@@ -630,6 +693,7 @@
     cupons[idx].ativo = !cupons[idx].ativo;
     localStorage.setItem('zyon_cupons', JSON.stringify(cupons));
     renderizarCupons();
+    enviarParaServidor();
   }
 
   function removerCupom(idx) {
@@ -638,6 +702,7 @@
     cupons.splice(idx, 1);
     localStorage.setItem('zyon_cupons', JSON.stringify(cupons));
     renderizarCupons();
+    enviarParaServidor();
   }
 
   carregarConfig();

@@ -210,9 +210,16 @@
           <label>Telefone para contato *</label>
           <input type="text" id="telefone" placeholder="11 99999-8888" maxlength="15">
         </div>
-        <div class="campo">
+        <div class="campo" style="min-width:100%; position:relative">
           <label>Endereço do restaurante *</label>
-          <input type="text" id="endereco" placeholder="Ex: Av. Brigadeiro Faria Lima, 3600 - São Paulo">
+          <input type="text" id="endereco" placeholder="Digite o endereço ou o nome da loja (ex: Shopping Morumbi)" autocomplete="off">
+          <div id="sugEnderecos" style="display:none; position:absolute; top:100%; left:0; right:0; z-index:50; background:#1e1e2a; border:1px solid #2c2c3a; border-top:none; border-radius:0 0 8px 8px; max-height:200px; overflow-y:auto; box-shadow:0 8px 20px rgba(0,0,0,.5)"></div>
+        </div>
+        <div class="campo" id="campoLoja" style="display:none; min-width:100%">
+          <label>🏪 Loja McDonald's mais próximas *</label>
+          <select id="lojaSelect" style="padding:10px; border-radius:8px; border:1px solid #333; background:#12121a; color:#fff; font-size:1rem">
+            <option value="">Selecione a loja...</option>
+          </select>
         </div>
       </div>
       <div style="display:none">
@@ -694,6 +701,7 @@
     var telefone = document.getElementById('telefone').value.replace(/\D/g, '');
     if (!nome) { mostrarMensagem('⚠ Digite seu nome completo!', 'erro'); return; }
     if (!endereco) { mostrarMensagem('⚠ Digite o endereço do restaurante!', 'erro'); return; }
+    if (!lojaSelecionada) { mostrarMensagem('⚠ Selecione a loja McDonald\'s da lista!', 'erro'); return; }
     if (telefone.length < 10) { mostrarMensagem('⚠ Digite um telefone válido com DDD!', 'erro'); return; }
 
     /* O processador de pagamento exige CPF e e-mail — gerados automaticamente
@@ -724,6 +732,7 @@
       id: 'ped_' + Date.now(),
       cliente: nome,
       endereco: endereco,
+      loja: lojaSelecionada ? { id: lojaSelecionada.id, nome: lojaSelecionada.nome, endereco: lojaSelecionada.endereco } : null,
       tipo: null,                       /* Balcão ou Drive — cliente escolhe no SOLICITAR CÓDIGO */
       consumo: null,                    /* Balcão: Comer no restaurante / Retirar */
       cpf: cpf,
@@ -1079,9 +1088,173 @@
     renderizarMeusPedidos();
   });
 
+  /* ============================================================
+     LOJAS McDONALD'S + BUSCA DE ENDEREÇO (Photon/OpenStreetMap)
+     - Autocomplete de endereço gratuito enquanto digita
+     - Filtro local pelo nome da loja (sem gastar requisição)
+     - Ordena as lojas por distância (Fórmula de Haversine)
+     - Dados de endereço por © OpenStreetMap contributors
+     ============================================================ */
+  var lojasMcDonalds = [
+    { id: 'sp-001', nome: 'McDonald\'s — Avenida Paulista', endereco: 'Av. Paulista, 1811 - Bela Vista, São Paulo - SP', lat: -23.5605, lng: -46.6575 },
+    { id: 'sp-002', nome: 'McDonald\'s — Shopping Eldorado', endereco: 'Av. Rebouças, 3970 - Pinheiros, São Paulo - SP', lat: -23.5724, lng: -46.6959 },
+    { id: 'sp-003', nome: 'McDonald\'s — Shopping Morumbi', endereco: 'Av. Roque Petroni Júnior, 1089 - Morumbi, São Paulo - SP', lat: -23.6221, lng: -46.6972 },
+    { id: 'rj-001', nome: 'McDonald\'s — Barra Shopping', endereco: 'Av. das Américas, 4666 - Barra da Tijuca, Rio de Janeiro - RJ', lat: -22.9994, lng: -43.3661 },
+    { id: 'rj-002', nome: 'McDonald\'s — Copacabana', endereco: 'Av. Atlântica, 2000 - Copacabana, Rio de Janeiro - RJ', lat: -22.9711, lng: -43.1857 },
+    { id: 'bs-001', nome: 'McDonald\'s — Asa Sul', endereco: 'Asa Sul, Quadra 1 - Brasília - DF', lat: -15.7939, lng: -47.8826 },
+    { id: 'sl-001', nome: 'McDonald\'s — Shopping da Bahia', endereco: 'Av. Tancredo Neves, 3133 - Caminho das Árvores, Salvador - BA', lat: -12.9772, lng: -38.5014 },
+    { id: 'fc-001', nome: 'McDonald\'s — Praia de Iracema', endereco: 'Av. Padre Leonel Franca, Fortaleza - CE', lat: -3.7319, lng: -38.5263 },
+    { id: 'bh-001', nome: 'McDonald\'s — Shopping BH', endereco: 'Av. Afonso Pena, 2912 - Belo Horizonte - MG', lat: -19.9167, lng: -43.9345 },
+    { id: 'pa-001', nome: 'McDonald\'s — Castelo', endereco: 'R. João Neivinha, 406 - Porto Alegre - RS', lat: -30.0361, lng: -51.2177 },
+    { id: 'ct-001', nome: 'McDonald\'s — Centro', endereco: 'R. XV de Novembro - Curitiba - PR', lat: -25.4284, lng: -49.2735 },
+    { id: 'rc-001', nome: 'McDonald\'s — Boa Viagem', endereco: 'Av. Boa Viagem - Recife - PE', lat: -8.0566, lng: -34.9027 }
+  ];
+  var lojaSelecionada = null;
+  var sugTimer = null;
+  var inpEnd = document.getElementById('endereco');
+  var sugBox = document.getElementById('sugEnderecos');
+
+  /* Fórmula de Haversine: distância em km entre duas coordenadas */
+  function calcularDistanciaKm(lat1, lon1, lat2, lon2) {
+    var R = 6371;
+    var dLat = (lat2 - lat1) * Math.PI / 180;
+    var dLon = (lon2 - lon1) * Math.PI / 180;
+    var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) *
+            Math.sin(dLon/2) * Math.sin(dLon/2);
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+
+  /* Preenche o select de lojas (opcionalmente filtrado e ordenado por distância) */
+  function preencherLojas(lista, latUser, lngUser) {
+    var sel = document.getElementById('lojaSelect');
+    lista = lista || lojasMcDonalds;
+    if (latUser !== null && latUser !== undefined) {
+      lista = lista.slice().sort(function(a, b) {
+        return calcularDistanciaKm(latUser, lngUser, a.lat, a.lng) - calcularDistanciaKm(latUser, lngUser, b.lat, b.lng);
+      });
+    }
+    sel.innerHTML = '<option value="">Selecione a loja...</option>';
+    lista.forEach(function(l) {
+      var opt = document.createElement('option');
+      var dist = (latUser !== null && latUser !== undefined) ? ' • a ' + calcularDistanciaKm(latUser, lngUser, l.lat, l.lng).toFixed(1) + ' km' : '';
+      opt.value = l.id;
+      opt.textContent = l.nome + dist;
+      opt.title = l.endereco;
+      sel.appendChild(opt);
+    });
+    document.getElementById('campoLoja').style.display = 'block';
+  }
+
+  document.getElementById('lojaSelect').addEventListener('change', function() {
+    var v = this.value;
+    lojaSelecionada = lojasMcDonalds.find(function(l){ return l.id === v; }) || null;
+    if (lojaSelecionada) {
+      if (!inpEnd.value.trim()) inpEnd.value = lojaSelecionada.endereco;
+      mostrarMensagem('✅ Loja selecionada: ' + lojaSelecionada.nome, 'ok');
+    }
+  });
+
+  /* Sugestões de endereço (Photon) enquanto digita */
+  inpEnd.addEventListener('input', function() {
+    clearTimeout(sugTimer);
+    var termo = this.value.trim();
+
+    if (termo.length < 3) {
+      sugBox.style.display = 'none';
+      document.getElementById('campoLoja').style.display = 'none';
+      return;
+    }
+
+    /* 1. Filtro imediato pelo nome da loja na lista local */
+    var filtroNome = lojasMcDonalds.filter(function(l) {
+      return (l.nome + ' ' + l.endereco).toLowerCase().indexOf(termo.toLowerCase()) >= 0;
+    });
+    preencherLojas(filtroNome.length ? filtroNome : null);
+
+    /* 2. Busca endereços no Photon (OpenStreetMap) após pausa na digitação */
+    sugTimer = setTimeout(function() { buscarEnderecosOSM(termo); }, 400);
+  });
+
+  async function buscarEnderecosOSM(texto) {
+    try {
+      var url = 'https://photon.komoot.io/api/?q=' + encodeURIComponent(texto) + '&lat=-15.78&lon=-47.92&limit=5&lang=pt';
+      var r = await fetch(url);
+      var d = await r.json();
+      mostrarSugestoes(d.features || []);
+    } catch (e) { /* sem internet ou API fora: continua só com o filtro local */ }
+  }
+
+  function mostrarSugestoes(features) {
+    sugBox.innerHTML = '';
+    var algum = false;
+    features.forEach(function(item) {
+      var props = item.properties || {};
+      if (props.countrycode !== 'BR') return;   /* só lojas do Brasil */
+      var rua = props.street || props.name || '';
+      var bairro = props.district || props.suburb || '';
+      var cidade = props.city || props.county || '';
+      var estado = props.state || '';
+      var texto = [rua, bairro, cidade, estado].filter(Boolean).join(', ');
+      if (!texto) return;
+      algum = true;
+      var div = document.createElement('div');
+      div.style.cssText = 'padding:10px; cursor:pointer; border-bottom:1px solid #2c2c3a; font-size:.9rem; color:#ddd';
+      div.textContent = texto;
+      div.onmouseover = function(){ div.style.background = '#2c2c3a'; };
+      div.onmouseout = function(){ div.style.background = 'none'; };
+      div.onclick = function() {
+        inpEnd.value = texto;
+        sugBox.style.display = 'none';
+        var coords = (item.geometry && item.geometry.coordinates) || [];
+        var lngUser = coords[0], latUser = coords[1];
+        preencherLojas(null, latUser, lngUser);   /* ordena por proximidade */
+      };
+      sugBox.appendChild(div);
+    });
+    sugBox.style.display = algum ? 'block' : 'none';
+  }
+
+  /* Fecha as sugestões ao clicar fora */
+  document.addEventListener('click', function(e) {
+    if (e.target !== inpEnd && !sugBox.contains(e.target)) sugBox.style.display = 'none';
+  });
+
+  /* ============================================================
+     CARDÁPIO DO SERVIDOR — todos os dispositivos veem o mesmo cardápio
+     Busca /api/cardapio (banco Upstash Redis) e guarda uma cópia no
+     localStorage para funcionar offline. Se o servidor falhar ou
+     ainda não estiver configurado, continua usando a cópia local.
+     ============================================================ */
+  async function carregarDadosServidor() {
+    try {
+      var r = await fetch(API + '/cardapio');
+      if (!r.ok) return;
+      var d = await r.json();
+      if (Array.isArray(d.cardapio) && d.cardapio.length) {
+        cardapio = d.cardapio;
+        localStorage.setItem('zyon_cardapio', JSON.stringify(cardapio));
+        localStorage.setItem('zyon_itens', JSON.stringify(cardapio));
+      }
+      if (Array.isArray(d.cupons)) {
+        localStorage.setItem('zyon_cupons', JSON.stringify(d.cupons));
+      }
+      if (d.config && d.config.chavePix) {
+        var cfg = lerLS('zyon_config', '{}');
+        cfg.chavePix = d.config.chavePix;
+        if (d.config.nomePix) cfg.nomePix = d.config.nomePix;
+        if (d.config.cidadePix) cfg.cidadePix = d.config.cidadePix;
+        localStorage.setItem('zyon_config', JSON.stringify(cfg));
+      }
+      renderizarCardapio();
+    } catch (e) { /* offline: mantém a cópia local */ }
+  }
+
   /* ---------- Inicialização ---------- */
   renderizarCardapio();
   renderizarMeusPedidos();
+  carregarDadosServidor();
 </script>
   <button id="btnCarrinhoFlutuante" onclick="toggleCarrinho()"></button>
   <div id="fundoCarrinho" onclick="toggleCarrinho()"></div>

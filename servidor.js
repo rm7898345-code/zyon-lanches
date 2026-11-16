@@ -19,6 +19,18 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
+/* Carrega variáveis do .env.local (para rodar local: node servidor.js) */
+try {
+  var envTxt = fs.readFileSync(path.join(__dirname, '.env.local'), 'utf8');
+  envTxt.split(/\r?\n/).forEach(function(linha) {
+    var m = linha.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/);
+    if (m && process.env[m[1]] === undefined) process.env[m[1]] = m[2].replace(/^"(.*)"$/, '$1');
+  });
+} catch (e) {}
+
+/* Banco de dados (Supabase) — compartilhado com as funções da Vercel */
+const store = require('./api/_banco.js');
+
 const PORTA = 3000;
 const PASTA_SITE = __dirname;
 const ARQ_CONFIG = path.join(__dirname, 'config.json');
@@ -111,7 +123,31 @@ var server = http.createServer(async function(req, res) {
   /* ===== APIs do proxy ===== */
   try {
     if (url === '/api/ping') {
-      return responder(res, 200, 'application/json', JSON.stringify({ ok: true, syncConfigurada: !!lerConfig().clientId }));
+      return responder(res, 200, 'application/json', JSON.stringify({ ok: true, syncConfigurada: !!lerConfig().clientId, bancoConfigurado: store.configurado() }));
+
+    } else if (url === '/api/cardapio' && req.method === 'GET') {
+      if (!store.configurado()) return responder(res, 503, 'application/json', JSON.stringify({ error: 'Banco de dados não configurado (.env.local: SUPABASE_URL / SUPABASE_SERVICE_KEY)' }));
+      var partes = await Promise.all([store.pegar('zyon:cardapio'), store.pegar('zyon:cupons'), store.pegar('zyon:config')]);
+      var cv = function(s, padrao) { try { return s ? JSON.parse(s) : padrao; } catch (e) { return padrao; } };
+      return responder(res, 200, 'application/json', JSON.stringify({
+        ok: true,
+        cardapio: cv(partes[0], []),
+        cupons: cv(partes[1], []),
+        config: cv(partes[2], {})
+      }));
+
+    } else if (url === '/api/cardapio' && req.method === 'POST') {
+      if (!store.configurado()) return responder(res, 503, 'application/json', JSON.stringify({ error: 'Banco de dados não configurado (.env.local: SUPABASE_URL / SUPABASE_SERVICE_KEY)' }));
+      var corpoCard = await lerCorpo(req);
+      var okAdmin = await store.autenticarAdmin(corpoCard.senha);
+      if (!okAdmin) return responder(res, 401, 'application/json', JSON.stringify({ error: 'Senha do administrador incorreta' }));
+      await Promise.all([
+        store.salvar('zyon:cardapio', JSON.stringify(Array.isArray(corpoCard.cardapio) ? corpoCard.cardapio : [])),
+        store.salvar('zyon:cupons', JSON.stringify(Array.isArray(corpoCard.cupons) ? corpoCard.cupons : [])),
+        store.salvar('zyon:config', JSON.stringify(corpoCard.config && typeof corpoCard.config === 'object' ? corpoCard.config : {}))
+      ]);
+      console.log('✔ Cardápio/cupons/config salvos no banco');
+      return responder(res, 200, 'application/json', JSON.stringify({ ok: true }));
 
     } else if (url === '/api/config' && req.method === 'POST') {
       var cfg = await lerCorpo(req);
