@@ -322,6 +322,23 @@
   async function enviarParaServidor() {
     var senha = sessionStorage.getItem('zyon_admin_senha');
     if (!senha) { alert('⚠ Faça login no painel para salvar no servidor.'); return; }
+    /* Pré-checagem: detecta se este endereço realmente fala com a API do site
+       (URLs de deployment antigas da Vercel são bloqueadas por login SSO) */
+    try {
+      var pre = await fetch(API + '/cardapio');
+      var tipo = pre.headers.get('content-type') || '';
+      if (!pre.ok || tipo.indexOf('json') === -1) {
+        alert('⚠ ESTE ENDEREÇO NÃO FALA COM A API DO SITE (' + location.host + ')\n\n' +
+              'Provavelmente você está numa URL de deployment antiga da Vercel (tem um código no meio do endereço).\n\n' +
+              '✅ Use o endereço oficial:\nhttps://zyon-lanchess.vercel.app/admin_itens.html');
+        return;
+      }
+    } catch (ePre) {
+      alert('⚠ Sem conexão com a API a partir deste endereço (' + location.host + ')\n\n' +
+            'Se você abriu o arquivo do PC (file://), rode "node servidor.js" e use http://localhost:3000/admin_itens.html\n\n' +
+            'No site hospedado, use: https://zyon-lanchess.vercel.app/admin_itens.html');
+      return;
+    }
     var cfg = lerLS('zyon_config', '{}');
     try {
       var r = await fetch(API + '/cardapio', {
@@ -340,7 +357,8 @@
       else alert('⚠ O servidor recusou (HTTP ' + r.status + '): ' + (d.error || 'resposta inválida'));
     } catch (e) {
       alert('⚠ Falha de rede ao salvar no servidor.\n\nDetalhe: ' + e.message +
-        '\n\nDica: confira se o endereço é https://zyon-lanchess.vercel.app e tente novamente.');
+        '\n\nEndereço atual: ' + location.host +
+        '\nDica: confira se o endereço é https://zyon-lanchess.vercel.app e tente novamente.');
     }
   }
 
