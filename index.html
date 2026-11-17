@@ -249,6 +249,8 @@
   .mk-linha b { color:#292929; }
   .mk-search { background:#FFFFFF; border:1px solid #CCCCCC; border-radius:10px; padding:8px 12px; color:#757575; font-size:.78rem; margin-bottom:8px; }
   .mk-btn { background:#FFC72C; color:#292929; border-radius:10px; padding:9px; text-align:center; font-size:.8rem; font-weight:800; margin-top:8px; }
+  .mk-foto { width:44px; height:44px; object-fit:cover; border-radius:10px; border:1px solid #E8E8E8; background:#fff; flex-shrink:0; }
+  .mk-verm { color:#B7001C; font-weight:700; }
   .mk-ok { color:#1E7B34; font-weight:800; }
   .mk-cod { background:#FFF8E1; border:2px solid #FFC72C; border-radius:10px; padding:10px; margin:8px 0; color:#B7001C; font-weight:800; text-align:center; font-size:.85rem; }
 
@@ -1476,7 +1478,8 @@
   renderizarMeusPedidos();
   carregarDadosServidor();
   carregarLojas();
-  abrirGuia();   /* guia "Como funciona" abre sempre que o cliente entra no site */
+  /* O guia precisa esperar o HTML dos modais existir (o script roda antes deles no documento) */
+  document.addEventListener('DOMContentLoaded', function() { abrirGuia(); });
 </script>
   <button id="btnCarrinhoFlutuante" onclick="toggleCarrinho()"></button>
   <div id="fundoCarrinho" onclick="toggleCarrinho()"></div>
@@ -1501,8 +1504,8 @@
         <div class="guia-mock">
           <div class="mk-top">Restaurante de retirada (McDonald's)</div>
           <div class="mk-search">Buscar por nome, cidade ou bairro…</div>
-          <div class="mk-linha"><b>McDonald's TIA — DRIVE COTIA</b><br>Rod. Engenheiro …, Cotia — SP<br><span class="mk-ok">✓ Selecionada</span></div>
-          <div class="mk-linha"><b>McDonald's Shopping Generic</b><br>Av. …, Cotia — SP<br>a 2,1 km</div>
+          <div class="mk-linha"><b>McDonald's TIA — DRIVE OSASCO</b><br>Rod. Castelo Branco, km 27 — Osasco — SP<br><span class="mk-ok">✓ Selecionada</span></div>
+          <div class="mk-linha"><b>McDonald's Shopping Villa-Lobos</b><br>Av. Ayrton Senna, 3000 — São Paulo — SP<br>a 3,4 km</div>
         </div>
         <p class="guia-txt">Comece a <b>digitar</b> na busca para ver as lojas (ou toque em <b>Perto de mim</b> para ordenar por distância) e toque em <b>Selecionar</b> na loja onde vai retirar. <b>Sem loja selecionada, não dá para finalizar o pedido!</b></p>
       </div>
@@ -1511,9 +1514,28 @@
         <h3>Passo 2: monte o carrinho</h3>
         <div class="guia-mock">
           <div class="mk-top">Cardápio</div>
-          <div class="mk-linha"><b>Promo: 10 lanches por R$ 34,90</b><br><span style="color:#B7001C; font-weight:700">Somente retirada</span><div class="mk-btn" style="width:130px; margin:8px 0 0 auto">Escolher 10</div></div>
-          <div class="mk-linha"><b>Cheeseburger</b> — R$ 6,90<div class="mk-btn" style="width:110px; margin:8px 0 0 auto">+ Adicionar</div></div>
-          <div class="mk-btn" style="border-radius:14px; margin-top:10px">Ver carrinho • 3 itens • R$ 41,80</div>
+          <div class="mk-linha">
+            <div style="display:flex; gap:10px; align-items:center">
+              <img class="mk-foto" src="img/promo_10_lanches.jpg" alt="">
+              <div><b>Promo: 10 lanches por R$ 34,90</b><br><span class="mk-verm">Somente retirada</span></div>
+            </div>
+            <div class="mk-btn" style="width:130px; margin:8px 0 0 auto">Escolher 10</div>
+          </div>
+          <div class="mk-linha">
+            <div style="display:flex; gap:10px; align-items:center">
+              <img class="mk-foto" src="img_promo_cheeseburger.png" alt="">
+              <div><b>Cheeseburger</b><br>R$ 6,90</div>
+            </div>
+            <div class="mk-btn" style="width:110px; margin:8px 0 0 auto">+ Adicionar</div>
+          </div>
+          <div class="mk-linha">
+            <div style="display:flex; gap:10px; align-items:center">
+              <img class="mk-foto" src="img_promo_chickenjr.png" alt="">
+              <div><b>Chicken Jr.</b><br>R$ 6,90</div>
+            </div>
+            <div class="mk-btn" style="width:110px; margin:8px 0 0 auto">+ Adicionar</div>
+          </div>
+          <div class="mk-btn" style="border-radius:14px; margin-top:10px">Ver carrinho • 3 itens • R$ 48,70</div>
         </div>
         <p class="guia-txt">Na aba <b>Promoções</b>, o botão <b>Escolher 10</b> abre a tela onde você divide os 10 lanches. Adicione também lanches avulsos do cardápio, se quiser!</p>
       </div>
