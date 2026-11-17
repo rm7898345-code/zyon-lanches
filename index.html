@@ -3,35 +3,52 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https://api.syncpayments.com.br http://localhost:3000; form-action 'none'; object-src 'none'; base-uri 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://api.syncpayments.com.br http://localhost:3000; form-action 'none'; object-src 'none'; base-uri 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 <title>ZYON — Fazer Pedido</title>
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', Arial, sans-serif; }
-  body { background:#12121a; color:#eee; min-height:100vh; padding-bottom:60px; }
-  header { background:linear-gradient(90deg,#ff5f00,#ffb400); padding:20px; text-align:center; }
-  header h1 { color:#fff; letter-spacing:4px; font-size:1.8rem; text-shadow:2px 2px 4px rgba(0,0,0,.3); }
-  header p { color:rgba(255,255,255,.9); font-size:.85rem; margin-top:4px; }
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Inter','Segoe UI',system-ui,Arial,sans-serif; }
+  body { background:#0d0d14; color:#eee; min-height:100vh; padding-bottom:60px; -webkit-font-smoothing:antialiased; }
+  header { background:linear-gradient(90deg,#ff5f00,#ffb400); padding:26px 20px; text-align:center; }
+  header h1 { color:#fff; letter-spacing:7px; font-size:1.9rem; font-weight:800; text-shadow:0 2px 6px rgba(0,0,0,.25); }
+  header p { color:rgba(255,255,255,.92); font-size:.85rem; margin-top:4px; font-weight:600; }
   .container { max-width:1000px; margin:0 auto; padding:20px; }
-  .msg { padding:12px 16px; border-radius:8px; margin-bottom:16px; font-weight:600; display:none; }
-  .msg.erro { background:#ffd6d6; color:#a30000; }
-  .msg.ok { background:#d4f5d4; color:#0a6b0a; }
+  .msg { padding:12px 16px; border-radius:10px; margin-bottom:16px; font-weight:600; display:none; border:1px solid transparent; }
+  .msg.erro { background:#2b1520; color:#ff9b9b; border-color:#5a2433; }
+  .msg.ok { background:#122b1c; color:#7bd8a0; border-color:#1f4a30; }
 
   /* Formulário */
-  .dados { background:#1e1e2a; border-radius:12px; padding:20px; margin-bottom:24px; box-shadow:0 4px 12px rgba(0,0,0,.4); }
-  .dados h2 { color:#ffb400; margin-bottom:14px; font-size:1.1rem; }
+  .dados { background:#181824; border:1px solid #23232f; border-radius:14px; padding:20px; margin-bottom:24px; box-shadow:0 2px 10px rgba(0,0,0,.35); }
+  .dados h2 { color:#fff; margin-bottom:14px; font-size:.95rem; text-transform:uppercase; letter-spacing:1.2px; display:flex; align-items:center; gap:10px; }
+  .dados h2::before { content:''; width:4px; height:18px; border-radius:2px; background:linear-gradient(180deg,#ff5f00,#ffb400); }
   .dados .row { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:12px; }
   .dados .campo { flex:1; min-width:200px; display:flex; flex-direction:column; }
-  .dados label { font-size:.8rem; color:#aaa; margin-bottom:5px; }
-  .dados input, .dados select { padding:10px; border-radius:8px; border:1px solid #333; background:#12121a; color:#fff; font-size:1rem; }
-  .dados input:focus, .dados select:focus { outline:2px solid #ff5f00; }
+  .dados label { font-size:.8rem; color:#aaa; margin-bottom:5px; font-weight:600; }
+  .dados input, .dados select { padding:11px; border-radius:10px; border:1px solid #2c2c3a; background:#12121a; color:#fff; font-size:1rem; }
+  .dados input:focus, .dados select:focus { outline:none; border-color:#ffb400; box-shadow:0 0 0 3px rgba(255,180,0,.15); }
 
-  /* Cards de loja (estilo "Encontre o seu Méqui") */
-  .loja-card { display:flex; gap:10px; align-items:center; padding:12px; border-bottom:1px solid #2c2c3a; background:#16161f; transition:background .15s; }
+  /* Cards de loja (busca "Restaurante de retirada") */
+  .loja-busca { display:flex; gap:8px; }
+  .loja-busca input { flex:1; min-width:0; padding:11px 14px; border-radius:10px; border:1px solid #2c2c3a; background:#12121a; color:#fff; font-size:1rem; }
+  .loja-busca button { background:#1e1e2a; border:1px solid #2c2c3a; color:#ffb400; padding:0 16px; border-radius:10px; cursor:pointer; font-weight:700; font-size:.85rem; white-space:nowrap; }
+  .loja-busca button:hover { border-color:#ffb400; }
+  .loja-dica { color:#777; font-size:.85rem; margin-top:8px; }
+  .loja-selecionada { display:flex; gap:10px; align-items:center; margin-top:8px; background:#221f12; border:1px solid #ffb400; border-radius:10px; padding:10px 12px; }
+  .loja-selecionada .ls-info { flex:1; min-width:0; }
+  .loja-selecionada .ls-info b { color:#ffb400; display:block; font-size:.92rem; margin-bottom:2px; }
+  .loja-selecionada .ls-info span { color:#aaa; font-size:.78rem; }
+  .loja-selecionada button { background:#1e1e2a; color:#ddd; border:1px solid #3a3a4a; padding:7px 14px; border-radius:8px; cursor:pointer; font-weight:700; font-size:.8rem; flex-shrink:0; }
+  .loja-selecionada button:hover { border-color:#ffb400; color:#ffb400; }
+  #lojasContador { font-size:.8rem; color:#888; margin-top:8px; }
+  #listaLojas { max-height:380px; overflow-y:auto; border:1px solid #23232f; border-radius:10px; margin-top:8px; background:#12121a; }
+  .loja-card { display:flex; gap:10px; align-items:center; padding:12px; border-bottom:1px solid #23232f; background:#16161f; transition:background .15s; }
   .loja-card:last-child { border-bottom:none; }
   .loja-card:hover { background:#1e1e2a; }
-  .loja-card.sel { background:#22231a; box-shadow:inset 3px 0 0 #ffb400; }
+  .loja-card.sel { background:#221f12; box-shadow:inset 3px 0 0 #ffb400; }
   .loja-info { flex:1; min-width:0; }
   .loja-nome { font-weight:700; color:#fff; font-size:.95rem; margin-bottom:3px; }
   .loja-card.sel .loja-nome { color:#ffb400; }
@@ -42,14 +59,15 @@
   .loja-btn.sel { background:#2c2c3a; color:#ffb400; cursor:default; }
 
   /* Cardápio */
-  .cardapio h2 { color:#ffb400; margin:10px 0 16px; font-size:1.2rem; }
+  .cardapio h2 { color:#fff; margin:10px 0 16px; font-size:.95rem; text-transform:uppercase; letter-spacing:1.2px; display:flex; align-items:center; gap:10px; }
+  .cardapio h2::before { content:''; width:4px; height:18px; border-radius:2px; background:linear-gradient(180deg,#ff5f00,#ffb400); }
   .tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px; }
   .tab { background:#1e1e2a; color:#ccc; border:1px solid #2c2c3a; padding:9px 18px; border-radius:30px; cursor:pointer; font-weight:700; font-size:.88rem; transition:all .15s; }
   .tab:hover { border-color:#ffb400; color:#fff; }
   .tab.ativa { background:linear-gradient(90deg,#ff5f00,#ffb400); color:#fff; border-color:transparent; }
   .titulo-secao { color:#ffb400; font-size:1.05rem; margin:26px 0 12px; padding-left:10px; border-left:4px solid #ff5f00; }
   .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:14px; }
-  .card { background:#1e1e2a; border-radius:12px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,.4); display:flex; flex-direction:column; }
+  .card { background:#181824; border:1px solid #23232f; border-radius:14px; overflow:hidden; box-shadow:0 2px 10px rgba(0,0,0,.35); display:flex; flex-direction:column; }
   .card .foto { height:160px; background:#2c2c3a; display:flex; align-items:center; justify-content:center; border-bottom:1px solid #2c2c3a; }
   .card .foto img { max-width:100%; max-height:100%; object-fit:contain; }
   .card .corpo { padding:14px; display:flex; flex-direction:column; gap:6px; flex:1; }
@@ -64,8 +82,9 @@
   .vazio { color:#888; text-align:center; padding:40px 0; grid-column:1/-1; }
 
   /* Carrinho */
-  .carrinho { background:#1e1e2a; border-radius:12px; padding:20px; margin-bottom:24px; box-shadow:0 4px 12px rgba(0,0,0,.4); display:none; }
-  .carrinho h2 { color:#ffb400; font-size:1.1rem; margin-bottom:12px; }
+  .carrinho { background:#181824; border:1px solid #23232f; border-radius:14px; padding:20px; margin-bottom:24px; box-shadow:0 2px 10px rgba(0,0,0,.35); display:none; }
+  .carrinho h2 { color:#fff; font-size:.95rem; text-transform:uppercase; letter-spacing:1.2px; margin-bottom:12px; display:flex; align-items:center; gap:10px; }
+  .carrinho h2::before { content:''; width:4px; height:18px; border-radius:2px; background:linear-gradient(180deg,#ff5f00,#ffb400); }
   .carrinho .linha { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid #2c2c3a; }
   .carrinho .linha img { width:52px; height:52px; object-fit:cover; border-radius:12px; background:#2c2c3a; flex-shrink:0; }
   .carrinho .linha-info { flex:1; min-width:0; display:flex; flex-direction:column; gap:4px; }
@@ -96,7 +115,6 @@
     padding:14px 18px; font-size:1rem; font-weight:800; cursor:pointer; box-shadow:0 8px 24px rgba(0,0,0,.5);
     justify-content:space-between; align-items:center; width:auto; max-width:520px; margin:0 auto; }
   #btnCarrinhoFlutuante .cf-esq { display:flex; align-items:center; gap:10px; }
-  #btnCarrinhoFlutuante .cf-icone { background:rgba(255,255,255,.25); border-radius:10px; padding:4px 10px; font-size:1.1rem; }
   #btnCarrinhoFlutuante .cf-total { background:#fff; color:#12121a; border-radius:10px; padding:4px 10px; font-size:.95rem; }
   #fundoCarrinho { display:none; position:fixed; inset:0; background:rgba(0,0,0,.65); z-index:950; }
 
@@ -177,8 +195,9 @@
   .botao { margin-top:18px; background:linear-gradient(90deg,#ff5f00,#ffb400); border:none; color:#fff; padding:12px 30px; border-radius:8px; font-weight:700; cursor:pointer; }
 
   /* Meus pedidos */
-  .meuspedidos { background:#1e1e2a; border-radius:12px; padding:20px; margin-top:30px; box-shadow:0 4px 12px rgba(0,0,0,.4); }
-  .meuspedidos h2 { color:#ffb400; font-size:1.1rem; margin-bottom:12px; }
+  .meuspedidos { background:#181824; border:1px solid #23232f; border-radius:14px; padding:20px; margin-top:30px; box-shadow:0 2px 10px rgba(0,0,0,.35); }
+  .meuspedidos h2 { color:#fff; font-size:.95rem; text-transform:uppercase; letter-spacing:1.2px; margin-bottom:12px; display:flex; align-items:center; gap:10px; }
+  .meuspedidos h2::before { content:''; width:4px; height:18px; border-radius:2px; background:linear-gradient(180deg,#ff5f00,#ffb400); }
   .mp-item { background:#12121a; border-radius:10px; padding:14px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
   .mp-item .det { font-size:.85rem; color:#ccc; }
   .mp-item .st { font-size:.75rem; font-weight:800; padding:4px 10px; border-radius:20px; }
@@ -192,14 +211,14 @@
   .mp-item button { background:#ffb400; color:#12121a; border:none; padding:8px 14px; border-radius:8px; font-weight:800; cursor:pointer; }
 
   /* Botão do guia no header */
-  .btn-guia { margin-top:10px; background:rgba(255,255,255,.08); border:1px solid #3a3a4a; color:#ffb400;
-    padding:9px 22px; border-radius:24px; font-weight:800; font-size:.9rem; cursor:pointer; }
-  .btn-guia:hover { background:rgba(255,180,0,.15); }
+  .btn-guia { margin-top:10px; background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.4); color:#fff;
+    padding:9px 22px; border-radius:24px; font-weight:700; font-size:.9rem; cursor:pointer; transition:background .15s; }
+  .btn-guia:hover { background:rgba(255,255,255,.25); }
 
   /* Modais (guia + promoção) */
   .modal-fundo { display:none; position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:1100; }
   .modal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
-    z-index:1101; background:#1e1e2a; border:1px solid #3a3a4a; border-radius:16px;
+    z-index:1101; background:#181824; border:1px solid #2c2c3a; border-radius:16px;
     width:calc(100% - 32px); max-width:480px; max-height:86vh; overflow-y:auto; padding:22px;
     box-shadow:0 20px 60px rgba(0,0,0,.6); }
   .modal h3 { color:#ffb400; margin:0 0 10px; font-size:1.2rem; }
@@ -254,8 +273,8 @@
 
 <header>
   <h1>ZYON</h1>
-  <p>🍔 lanches McDonald's pagos com Pix • retire com o código do app</p>
-  <button class="btn-guia" onclick="abrirGuia()">❓ Como funciona</button>
+  <p>lanches McDonald's pagos com Pix • retire com o código do app</p>
+  <button class="btn-guia" onclick="abrirGuia()">Como funciona</button>
 </header>
 
 <div class="container">
@@ -266,7 +285,7 @@
   <div id="telaCliente">
 
     <div class="dados">
-      <h2>📋 Seus dados</h2>
+      <h2>Seus dados</h2>
       <div class="row">
         <div class="campo">
           <label>Nome completo *</label>
@@ -277,15 +296,15 @@
           <input type="text" id="telefone" placeholder="11 99999-8888" maxlength="15">
         </div>
         <div class="campo" id="campoLoja" style="display:none; min-width:100%">
-          <label>🏪 Encontre o seu Méqui *</label>
-          <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px">
-            <input type="text" id="buscaLoja" placeholder="Buscar por nome, cidade ou bairro…" autocomplete="off"
-                   style="flex:1; padding:11px 14px; border-radius:24px; border:1px solid #333; background:#12121a; color:#fff; font-size:1rem; box-sizing:border-box">
-            <button type="button" id="btnGeo" title="Ordenar lojas pela minha distância"
-                    style="background:#2c2c3a; border:1px solid #3a3a4a; color:#ffb400; padding:11px 14px; border-radius:24px; cursor:pointer; font-size:.9rem; white-space:nowrap">📍 Perto de mim</button>
+          <label>Restaurante de retirada (McDonald's) *</label>
+          <div class="loja-busca">
+            <input type="text" id="buscaLoja" placeholder="Buscar por nome, cidade ou bairro…" autocomplete="off">
+            <button type="button" id="btnGeo" title="Ordenar lojas pela minha distância">Perto de mim</button>
           </div>
-          <div id="lojasContador" style="font-size:.8rem; color:#888; margin-bottom:6px"></div>
-          <div id="listaLojas" style="max-height:420px; overflow-y:auto; border:1px solid #2c2c3a; border-radius:10px"></div>
+          <div class="loja-selecionada" id="lojaSelecionadaBox" style="display:none"></div>
+          <div class="loja-dica" id="lojaDica" style="display:none">Comece a digitar para buscar entre as 926 lojas do Brasil — ou toque em "Perto de mim" para ver as mais próximas.</div>
+          <div id="lojasContador" style="display:none"></div>
+          <div id="listaLojas" style="display:none"></div>
         </div>
       </div>
       <div style="display:none">
@@ -298,82 +317,82 @@
 
     <div class="carrinho" id="divCarrinho">
       <div class="sheet-fechar"><button onclick="toggleCarrinho()">← Voltar e escolher mais itens</button></div>
-      <h2>🛒 Seu carrinho</h2>
+      <h2>Seu carrinho</h2>
       <div id="listaCarrinho"></div>
       <div class="cupom-row">
-        <input type="text" id="cupomInput" placeholder="🎟 Código de desconto" maxlength="20">
+        <input type="text" id="cupomInput" placeholder="Código de desconto" maxlength="20">
         <button onclick="aplicarCupom()">Aplicar</button>
       </div>
       <div id="cupomAplicado" class="cupom-aplicado" style="display:none"></div>
       <div class="total" style="margin-top:12px"><span>Subtotal</span><span id="subtotalGeral">R$ 0.00</span></div>
-      <div class="linha desconto" id="linhaDesconto" style="display:none"><span>🎟 Desconto</span><span id="valorDesconto">R$ 0.00</span></div>
-      <div class="linha desconto" id="linhaTaxa" style="display:none"><span>🛵 Taxa de serviço</span><span id="valorTaxa">R$ 2.00</span></div>
+      <div class="linha desconto" id="linhaDesconto" style="display:none"><span>Desconto</span><span id="valorDesconto">R$ 0.00</span></div>
+      <div class="linha desconto" id="linhaTaxa" style="display:none"><span>Taxa de serviço</span><span id="valorTaxa">R$ 2.00</span></div>
       <div class="total"><span style="font-size:1.35rem">Total</span><span id="totalGeral">R$ 0.00</span></div>
       <div class="economia" id="economiaMsg" style="display:none"></div>
-      <button class="finalizar" id="btnFinalizar" onclick="finalizarPedido()" disabled>✅ Finalizar e Pagar</button>
-      <button class="limpar" onclick="limparCarrinho()">🗑 Esvaziar carrinho</button>
+      <button class="finalizar" id="btnFinalizar" onclick="finalizarPedido()" disabled>Finalizar e Pagar</button>
+      <button class="limpar" onclick="limparCarrinho()">Esvaziar carrinho</button>
     </div>
 
     <div class="cardapio">
-      <h2>🍔 Cardápio</h2>
+      <h2>Cardápio</h2>
       <div class="tabs" id="tabsCategorias"></div>
       <div id="secoesCardapio"></div>
     </div>
 
     <div class="meuspedidos" id="divMeusPedidos" style="display:none">
-      <h2>📦 Meus Pedidos</h2>
+      <h2>Meus Pedidos</h2>
       <div id="listaMeusPedidos"></div>
     </div>
   </div>
 
   <!-- ================= TELA 2: PAGAMENTO PIX ================= -->
   <div class="pagamento" id="telaPagamento">
-    <h2>💳 Pagamento via Pix</h2>
+    <h2>Pagamento via Pix</h2>
     <div class="valor" id="pgValor">R$ 0.00</div>
     <div class="resumo" id="pgResumo"></div>
     <div class="pixbox">
-      <div class="titulo">✨ PIX — Pague escaneando ou copiando</div>
+      <div class="titulo">PIX — Pague escaneando ou copiando</div>
       <div id="pgStatus" style="font-size:.85rem; margin-bottom:10px"></div>
       <img id="pgQR" alt="QR Code Pix" style="display:none; width:230px; height:230px; background:#fff; border-radius:10px; padding:6px; margin:0 auto">
       <div class="chave" id="pgChave">—</div>
       <div class="copiacola" id="pgCopiaCola">—</div>
-      <button class="botao-copiar" onclick="copiarPix()">📋 Copiar código Pix</button>
+      <button class="botao-copiar" onclick="copiarPix()">Copiar código Pix</button>
     </div>
     <div style="color:#888; font-size:.85rem" id="pgManualInfo">Fallback: se o gateway estiver indisponível, confirme manualmente:</div>
-    <button class="confirmar" id="pgConfirmarManual" onclick="confirmarPagamento()">✅ Já fiz o pagamento</button>
+    <button class="confirmar" id="pgConfirmarManual" onclick="confirmarPagamento()">Já fiz o pagamento</button>
   </div>
 
   <!-- ================= TELA 3: AGUARDANDO ================= -->
   <div class="aguardando" id="telaAguardando">
     <div class="spinner" id="agSpinner"></div>
-    <h2 id="agTitulo">⏳ Aguarde, seu pedido será entregue em</h2>
+    <h2 id="agTitulo">Aguarde, seu pedido será entregue em</h2>
     <div class="tempo" id="agTempo">20 minutos</div>
     <div class="itens" id="agItens"></div>
-    <div class="status" id="agStatus">Quando o pedido estiver pronto, os códigos do app McDonald's e os prints aparecerão aqui automaticamente. 😉</div>
+    <div class="status" id="agStatus">Quando o pedido estiver pronto, os códigos do app McDonald's e os prints aparecerão aqui automaticamente. </div>
 
     <div id="agAprovado" style="display:none; margin-top:16px">
-      <button class="finalizar" onclick="abrirSolicitarCodigo()">🔑 SOLICITAR CÓDIGO</button>
+      <button class="finalizar" onclick="abrirSolicitarCodigo()">SOLICITAR CÓDIGO</button>
       <div id="solTipo" style="display:none; margin-top:16px; text-align:left">
         <div style="color:#ffb400; font-weight:800; margin-bottom:8px">Como você vai pegar seu pedido?</div>
         <div style="display:flex; gap:10px">
-          <button class="tipo-opt" id="optBalcao" onclick="escolherTipo('Balcão')">🏪 Balcão</button>
-          <button class="tipo-opt" id="optDrive" onclick="escolherTipo('Drive')">🚗 Drive</button>
+          <button class="tipo-opt" id="optBalcao" onclick="escolherTipo('Balcão')">Balcão</button>
+          <button class="tipo-opt" id="optDrive" onclick="escolherTipo('Drive')">Drive</button>
         </div>
         <div id="solConsumo" style="display:none; margin-top:14px">
           <div style="color:#ffb400; font-weight:800; margin-bottom:8px">No balcão, você quer:</div>
           <div style="display:flex; gap:10px">
-            <button class="tipo-opt" id="optComer" onclick="escolherConsumo('Comer no restaurante')">🍽 Comer no restaurante</button>
-            <button class="tipo-opt" id="optRetirar" onclick="escolherConsumo('Retirar')">🛍 Retirar</button>
+            <button class="tipo-opt" id="optComer" onclick="escolherConsumo('Comer no restaurante')">Comer no restaurante</button>
+            <button class="tipo-opt" id="optRetirar" onclick="escolherConsumo('Retirar')">Retirar</button>
           </div>
         </div>
-        <button class="finalizar" id="btnReceberCodigos" style="display:none; margin-top:16px" onclick="receberCodigos()">✅ Receber meus códigos</button>
+        <button class="finalizar" id="btnReceberCodigos" style="display:none; margin-top:16px" onclick="receberCodigos()">Receber meus códigos</button>
       </div>
     </div>
   </div>
 
   <!-- ================= TELA 4: PRONTO (códigos + prints) ================= -->
   <div class="prontotela" id="telaPronto">
-    <h2>🎉 Seu pedido está pronto!</h2>
+    <h2>Seu pedido está pronto!</h2>
     <div class="instr">Use os códigos abaixo no app do McDonald's e confira os prints:</div>
     <div id="prConteudo"></div>
     <button class="botao" onclick="voltarCliente()">← Fazer novo pedido</button>
@@ -382,7 +401,7 @@
 </div>
 
 <footer style="text-align:center; padding:30px 20px; color:#777; font-size:.82rem">
-  ZYON © 2026 — Não afiliado ao McDonald's. Marcas pertencem aos seus titulares.<br>
+  ZYON 2026 — Não afiliado ao McDonald's. Marcas pertencem aos seus titulares.<br>
   <a href="termos.html" style="color:#ffb400; text-decoration:none">Termos de Uso</a> •
   <a href="termos.html#dados" style="color:#ffb400; text-decoration:none">Privacidade</a> •
   <a href="termos.html#reembolso" style="color:#ffb400; text-decoration:none">Política de Reembolso</a>
@@ -423,11 +442,11 @@
 
   /* Cardápio (com fotos e categorias) */
   var CATEGORIAS = [
-    { id: 'Promoções', nome: '🔥 Promoções' },
-    { id: 'Lanches', nome: '🍔 Lanches' },
-    { id: 'Acompanhamentos', nome: '🍟 Acompanhamentos' },
-    { id: 'Combos', nome: '🥤 Combos' },
-    { id: 'Sobremesas', nome: '🍨 Sobremesas' }
+    { id: 'Promoções', nome: 'Promoções' },
+    { id: 'Lanches', nome: 'Lanches' },
+    { id: 'Acompanhamentos', nome: 'Acompanhamentos' },
+    { id: 'Combos', nome: 'Combos' },
+    { id: 'Sobremesas', nome: 'Sobremesas' }
   ];
   var catAtiva = 'Todos';
 
@@ -439,7 +458,7 @@
     secoes.innerHTML = '';
 
     if (cardapio.length === 0) {
-      secoes.innerHTML = '<div class="vazio">🍽 Nenhum item cadastrado ainda.<br>Peça ao administrador para cadastrar os lanches em <b>admin_itens.html</b>.</div>';
+      secoes.innerHTML = '<div class="vazio">Nenhum item cadastrado ainda.<br>Peça ao administrador para cadastrar os lanches em <b>admin_itens.html</b>.</div>';
       return;
     }
 
@@ -452,7 +471,7 @@
       var cat = CATEGORIAS.find(function(c){ return c.id === cid; });
       var btn = document.createElement('button');
       btn.className = 'tab' + (catAtiva === cid ? ' ativa' : '');
-      btn.textContent = cat ? cat.nome : '⭐ Todos';
+      btn.textContent = cat ? cat.nome : 'Todos';
       btn.onclick = function(){ catAtiva = cid; renderizarCardapio(); };
       tabs.appendChild(btn);
     });
@@ -464,7 +483,7 @@
         if (doGrupo.length) secoes.appendChild(criarSecao(cat.nome, doGrupo));
       });
       var semCat = cardapio.filter(function(i){ return !i.categoria; });
-      if (semCat.length) secoes.appendChild(criarSecao('⭐ Destaques', semCat));
+      if (semCat.length) secoes.appendChild(criarSecao('Destaques', semCat));
     } else {
       var cat = CATEGORIAS.find(function(c){ return c.id === catAtiva; });
       var doGrupo = cardapio.filter(function(i){ return (i.categoria || 'Lanches') === catAtiva; });
@@ -491,10 +510,10 @@
     var div = document.createElement('div');
     div.className = 'card' + (esgotado ? ' esgotado' : '') + (item.promo ? ' promo' : '');
     var btnPromo = item.promo
-      ? '<button ' + (esgotado ? 'disabled' : '') + ' onclick="abrirPromoModal(\'' + idSeguro + '\')">' + (esgotado ? 'Esgotado' : '🔥 Escolher 10') + '</button>'
+      ? '<button ' + (esgotado ? 'disabled' : '') + ' onclick="abrirPromoModal(\'' + idSeguro + '\')">' + (esgotado ? 'Esgotado' : 'Escolher 10') + '</button>'
       : '<button ' + (esgotado ? 'disabled' : '') + ' onclick="adicionarCarrinho(\'' + idSeguro + '\')">' + (esgotado ? 'Esgotado' : '+ Adicionar') + '</button>';
     div.innerHTML =
-      '<div class="foto"><img src="' + fotoSegura(item.foto) + '" alt="' + esc(item.nome) + '" onerror="this.style.display=\'none\'; this.parentElement.insertAdjacentHTML(\'beforeend\',\'<span style=&quot;font-size:48px&quot;>🍔</span>\')"></div>' +
+      '<div class="foto"><img src="' + fotoSegura(item.foto) + '" alt="' + esc(item.nome) + '" onerror="this.style.display=\'none\'"></div>' +
       '<div class="corpo">' +
       '<div class="nome">' + esc(item.nome) + '</div>' +
       '<div class="preco">R$ ' + item.preco_real.toFixed(2) + '</div>' +
@@ -531,11 +550,11 @@
     if (!item) return;
     var qtdAtual = carrinho[itemId] || 0;
     if (qtdAtual + 1 > QTD_MAXIMA) {
-      mostrarMensagem('⚠ Quantidade máxima de ' + QTD_MAXIMA + ' por item!', 'erro');
+      mostrarMensagem('Quantidade máxima de ' + QTD_MAXIMA + ' por item!', 'erro');
       return;
     }
     if (item.estoque < 999 && qtdAtual + 1 > item.estoque) {
-      mostrarMensagem('⚠ Estoque insuficiente para "' + item.nome + '"!', 'erro');
+      mostrarMensagem('Estoque insuficiente para "' + item.nome + '"!', 'erro');
       return;
     }
     carrinho[itemId] = qtdAtual + 1;
@@ -562,23 +581,23 @@
 
   function aplicarCupom() {
     var codigo = document.getElementById('cupomInput').value.trim().toUpperCase();
-    if (!codigo) { mostrarMensagem('⚠ Digite um código de cupom!', 'erro'); return; }
+    if (!codigo) { mostrarMensagem('Digite um código de cupom!', 'erro'); return; }
     var cupons = lerLS('zyon_cupons', '[]');
     var c = cupons.find(function(x){ return x.codigo.toUpperCase() === codigo; });
-    if (!c) { mostrarMensagem('⚠ Cupom não existe ou está inválido!', 'erro'); return; }
-    if (!c.ativo) { mostrarMensagem('⚠ Este cupom está desativado.', 'erro'); return; }
-    if (c.usados >= c.maxUsos) { mostrarMensagem('⚠ Este cupom esgotou os usos!', 'erro'); return; }
+    if (!c) { mostrarMensagem('Cupom não existe ou está inválido!', 'erro'); return; }
+    if (!c.ativo) { mostrarMensagem('Este cupom está desativado.', 'erro'); return; }
+    if (c.usados >= c.maxUsos) { mostrarMensagem('Este cupom esgotou os usos!', 'erro'); return; }
     var subtotalAtual = 0;
     for (var id in carrinho) {
       var it = cardapio.find(function(i){ return i.id === idBase(id); });
       if (it) subtotalAtual += it.preco_real * carrinho[id];
     }
     if (c.valorMin && subtotalAtual < c.valorMin) {
-      mostrarMensagem('⚠ Este cupom exige pedido mínimo de R$ ' + c.valorMin.toFixed(2) + '!', 'erro');
+      mostrarMensagem('Este cupom exige pedido mínimo de R$ ' + c.valorMin.toFixed(2) + '!', 'erro');
       return;
     }
     cupomAtivo = c;
-    mostrarMensagem('✅ Cupom ' + codigo + ' aplicado! ' + c.desconto + '% de desconto', 'ok');
+    mostrarMensagem('Cupom ' + codigo + ' aplicado! ' + c.desconto + '% de desconto', 'ok');
     atualizarCarrinho();
   }
 
@@ -641,13 +660,13 @@
     document.getElementById('totalGeral').textContent = 'R$ ' + totalFinal.toFixed(2);
     var eco = document.getElementById('economiaMsg');
     eco.style.display = desconto > 0 ? 'block' : 'none';
-    if (desconto > 0) eco.textContent = '🎉 Você está economizando R$ ' + desconto.toFixed(2) + ' com o cupom ' + cupomAtivo.codigo.toUpperCase() + '!';
+    if (desconto > 0) eco.textContent = 'Você está economizando R$ ' + desconto.toFixed(2) + ' com o cupom ' + cupomAtivo.codigo.toUpperCase() + '!';
 
     /* Cupom aplicado */
     var ca = document.getElementById('cupomAplicado');
     if (cupomAtivo) {
       ca.style.display = 'flex';
-      ca.innerHTML = '<span>🎟 <b>' + esc(cupomAtivo.codigo.toUpperCase()) + '</b> — ' + cupomAtivo.desconto + '% OFF</span>' +
+      ca.innerHTML = '<span><b>' + esc(cupomAtivo.codigo.toUpperCase()) + '</b> — ' + cupomAtivo.desconto + '% OFF</span>' +
                      '<button onclick="removerCupom()">remover</button>';
       document.getElementById('cupomInput').value = '';
     } else {
@@ -673,7 +692,7 @@
     var emFluxo = (secaoPag && getComputedStyle(secaoPag).display !== 'none') ||
                   (secaoAguar && getComputedStyle(secaoAguar).display !== 'none');
     if (sheetAberto || emFluxo || !escondido) { btn.style.display = 'none'; return; }
-    btn.innerHTML = '<span class="cf-esq"><span class="cf-icone">🛒</span><span>Ver carrinho</span></span>' +
+    btn.innerHTML = '<span class="cf-esq"><span>Ver carrinho</span></span>' +
                     '<span class="cf-total">' + unidades + ' ' + (unidades === 1 ? 'item' : 'itens') + ' • R$ ' + total.toFixed(2) + '</span>';
     btn.style.display = 'flex';
   }
@@ -722,7 +741,7 @@
     var btn = document.getElementById('btnCarrinhoFlutuante');
     sheetAberto = !sheetAberto;
     if (sheetAberto) {
-      if (Object.keys(carrinho).length === 0) { sheetAberto = false; mostrarMensagem('⚠ Seu carrinho está vazio!', 'erro'); return; }
+      if (Object.keys(carrinho).length === 0) { sheetAberto = false; mostrarMensagem('Seu carrinho está vazio!', 'erro'); return; }
       cart.classList.add('sheet-aberto');
       fundo.style.display = 'block';
       btn.style.display = 'none';
@@ -760,13 +779,13 @@
   function finalizarPedido() {
     var totalUnidades = 0;
     for (var id in carrinho) totalUnidades += carrinho[id];
-    if (totalUnidades === 0) { mostrarMensagem('⚠ Seu carrinho está vazio!', 'erro'); return; }
+    if (totalUnidades === 0) { mostrarMensagem('Seu carrinho está vazio!', 'erro'); return; }
 
     var nome = document.getElementById('nome').value.trim();
     var telefone = document.getElementById('telefone').value.replace(/\D/g, '');
-    if (!nome) { mostrarMensagem('⚠ Digite seu nome completo!', 'erro'); return; }
-    if (!lojaSelecionada) { mostrarMensagem('⚠ Selecione a loja McDonald\'s em "Encontre o seu Méqui"!', 'erro'); return; }
-    if (telefone.length < 10) { mostrarMensagem('⚠ Digite um telefone válido com DDD!', 'erro'); return; }
+    if (!nome) { mostrarMensagem('Digite seu nome completo!', 'erro'); return; }
+    if (!lojaSelecionada) { mostrarMensagem('Selecione o restaurante de retirada (McDonald\'s)!', 'erro'); return; }
+    if (telefone.length < 10) { mostrarMensagem('Digite um telefone válido com DDD!', 'erro'); return; }
 
     /* O processador de pagamento exige CPF e e-mail — gerados automaticamente
        para o cliente não precisar preencher (o tipo de pedido é escolhido depois) */
@@ -788,7 +807,7 @@
     if (cupomAtivo && total > 0) {
       desconto = Math.round(total * cupomAtivo.desconto) / 100;
       if (cupomAtivo.valorMin && total < cupomAtivo.valorMin) {
-        mostrarMensagem('⚠ O cupom ' + cupomAtivo.codigo.toUpperCase() + ' exige pedido mínimo de R$ ' + cupomAtivo.valorMin.toFixed(2) + '!', 'erro');
+        mostrarMensagem('O cupom ' + cupomAtivo.codigo.toUpperCase() + ' exige pedido mínimo de R$ ' + cupomAtivo.valorMin.toFixed(2) + '!', 'erro');
         return;
       }
     }
@@ -844,7 +863,7 @@
       pedidoAtual.itens.map(function(i){ return esc(i.nome) + ' × ' + i.qtd; }).join(', ');
 
     try {
-      document.getElementById('pgStatus').textContent = '⏳ Gerando seu Pix…';
+      document.getElementById('pgStatus').textContent = 'Gerando seu Pix…';
 
       var r = await fetch(API + '/pix/criar', {
         method: 'POST',
@@ -868,7 +887,7 @@
       document.getElementById('pgChave').textContent = 'Pix Copia e Cola';
       document.getElementById('pgCopiaCola').textContent = d.pix_code;
       atualizarQR(d.pix_code);
-      document.getElementById('pgStatus').textContent = '✅ Pix gerado! A confirmação é AUTOMÁTICA quando o pagamento for aprovado.';      document.getElementById('pgConfirmarManual').style.display = 'none';
+      document.getElementById('pgStatus').textContent = 'Pix gerado! A confirmação é AUTOMÁTICA quando o pagamento for aprovado.';      document.getElementById('pgConfirmarManual').style.display = 'none';
       document.getElementById('pgManualInfo').style.display = 'none';
 
       /* inicia consulta automática de status */
@@ -876,8 +895,8 @@
     } catch (e) {
       /* Servidor fora do ar ou SyncPay não configurada -> fallback manual */
       var config = lerLS('zyon_config', '{}');
-      document.getElementById('pgStatus').textContent = '⚠ Pagamento automático temporariamente indisponível. Use o Pix manual abaixo.';
-      document.getElementById('pgChave').textContent = config.chavePix ? 'Chave: ' + config.chavePix : '⚠ Admin não configurou o pagamento!';
+      document.getElementById('pgStatus').textContent = 'Pagamento automático temporariamente indisponível. Use o Pix manual abaixo.';
+      document.getElementById('pgChave').textContent = config.chavePix ? 'Chave: ' + config.chavePix : 'Admin não configurou o pagamento!';
       document.getElementById('pgCopiaCola').textContent = config.chavePix ? gerarPixManual(config.chavePix, config.nomePix || 'ZYON', config.cidadePix || 'SAO PAULO', pedidoAtual.total, pedidoAtual.id) : '';
       atualizarQR(document.getElementById('pgCopiaCola').textContent || '');
       document.getElementById('pgConfirmarManual').style.display = 'block';
@@ -905,7 +924,7 @@
         pagarAprovado(true);
       } else if (tentativas > 180) {   /* ~30 min de consulta */
         clearInterval(pollTimer);
-        document.getElementById('pgStatus').textContent = '⏰ Tempo esgotado. Se já pagou, clique no botão manual abaixo.';
+        document.getElementById('pgStatus').textContent = 'Tempo esgotado. Se já pagou, clique no botão manual abaixo.';
         document.getElementById('pgConfirmarManual').style.display = 'block';
       }
     }, 10000);
@@ -930,17 +949,17 @@
     document.getElementById('telaPagamento').style.display = 'none';
     document.getElementById('telaAguardando').style.display = 'block';
     document.getElementById('agTempo').textContent = pedidoAtual.tempoEspera + ' minutos';
-    document.getElementById('agTitulo').textContent = '⏳ Aguarde, seu pedido será entregue em';
+    document.getElementById('agTitulo').textContent = 'Aguarde, seu pedido será entregue em';
     document.getElementById('agTempo').style.display = 'block';
     var sp2 = document.getElementById('agSpinner'); if (sp2) sp2.style.display = 'block';
     document.getElementById('agAprovado').style.display = 'none';
     document.getElementById('solTipo').style.display = 'none';
     document.getElementById('solConsumo').style.display = 'none';
     document.getElementById('btnReceberCodigos').style.display = 'none';
-    document.getElementById('agStatus').textContent = 'Quando o pedido estiver pronto, os códigos do app McDonald\'s e os prints aparecerão aqui automaticamente. 😉';
+    document.getElementById('agStatus').textContent = 'Quando o pedido estiver pronto, os códigos do app McDonald\'s e os prints aparecerão aqui automaticamente. ';
     document.getElementById('agItens').innerHTML = '<b>Itens:</b> ' +
       pedidoAtual.itens.map(function(i){ return esc(i.nome) + ' × ' + i.qtd; }).join(', ') +
-      (automatico ? '<div style="color:#4caf50; margin-top:6px">✅ Pagamento aprovado automaticamente</div>' : '');
+      (automatico ? '<div style="color:#4caf50; margin-top:6px">Pagamento aprovado automaticamente</div>' : '');
   }
 
   function atualizarQR(codigoPix) {
@@ -960,14 +979,14 @@
 
   function copiarPix() {
     var txt = document.getElementById('pgCopiaCola').textContent;
-    if (!txt) { mostrarMensagem('⚠ Sem código Pix disponível!', 'erro'); return; }
+    if (!txt) { mostrarMensagem('Sem código Pix disponível!', 'erro'); return; }
     navigator.clipboard.writeText(txt).then(function(){
-      mostrarMensagem('✅ Código Pix copiado! Cole no seu banco e faça o pagamento.', 'ok');
+      mostrarMensagem('Código Pix copiado! Cole no seu banco e faça o pagamento.', 'ok');
     }).catch(function(){
       var ta = document.createElement('textarea');
       ta.value = txt; document.body.appendChild(ta); ta.select();
       document.execCommand('copy'); document.body.removeChild(ta);
-      mostrarMensagem('✅ Código Pix copiado!', 'ok');
+      mostrarMensagem('Código Pix copiado!', 'ok');
     });
   }
 
@@ -1007,9 +1026,9 @@
     /* Admin aprovou o pedido: cliente vê o botão SOLICITAR CÓDIGO */
     var sp = document.getElementById('agSpinner');
     if (sp) sp.style.display = 'none';
-    document.getElementById('agTitulo').textContent = '✅ Pedido aprovado!';
+    document.getElementById('agTitulo').textContent = 'Pedido aprovado!';
     document.getElementById('agTempo').style.display = 'none';
-    document.getElementById('agStatus').textContent = 'Solicite agora seu código do app McDonald\'s 👇';
+    document.getElementById('agStatus').textContent = 'Solicite agora seu código do app McDonald\'s ';
     document.getElementById('agAprovado').style.display = 'block';
   }
 
@@ -1038,8 +1057,8 @@
 
   function receberCodigos() {
     if (!pedidoAtual) return;
-    if (!pedidoAtual.tipo) { mostrarMensagem('⚠ Escolha Balcão ou Drive!', 'erro'); return; }
-    if (pedidoAtual.tipo === 'Balcão' && !pedidoAtual.consumo) { mostrarMensagem('⚠ Escolha se vai comer no restaurante ou retirar!', 'erro'); return; }
+    if (!pedidoAtual.tipo) { mostrarMensagem('Escolha Balcão ou Drive!', 'erro'); return; }
+    if (pedidoAtual.tipo === 'Balcão' && !pedidoAtual.consumo) { mostrarMensagem('Escolha se vai comer no restaurante ou retirar!', 'erro'); return; }
     /* salva a escolha e avisa o admin que o cliente está solicitando os códigos */
     var pedidos = lerLS('zyon_pedidos', '[]');
     var p = pedidos.find(function(x){ return x.id === pedidoAtual.id; });
@@ -1056,8 +1075,8 @@
   /* Cliente solicitou -> aguarda o admin preparar na cozinha e enviar os códigos */
   function mostrarSolicitado() {
     document.getElementById('solTipo').style.display = 'none';
-    document.getElementById('agTitulo').textContent = '🔐 Código solicitado!';
-    document.getElementById('agStatus').textContent = '⏳ Estamos preparando seu pedido na cozinha. Seus códigos aparecem aqui em instantes!';
+    document.getElementById('agTitulo').textContent = 'Código solicitado!';
+    document.getElementById('agStatus').textContent = 'Estamos preparando seu pedido na cozinha. Seus códigos aparecem aqui em instantes!';
     var btn = document.querySelector('#agAprovado .finalizar');
     if (btn) btn.style.display = 'none';
   }
@@ -1070,16 +1089,16 @@
     var html = '';
     if (p.codigosApp) {
       p.codigosApp.forEach(function(c, i) {
-        html += '<div class="codigo-item">🔑 Código ' + (i + 1) + ': ' + esc(c) + '</div>';
+        html += '<div class="codigo-item">Código ' + (i + 1) + ': ' + esc(c) + '</div>';
       });
     }
     if (p.printApp) {
       html += '<img class="print-img" src="' + fotoSegura(p.printApp) + '" alt="Print do pedido no app McDonald\'s">';
     }
     if (!html) html = '<div class="instr">Aguardando o administrador enviar os códigos…</div>';
-    if (p.tipo) html += '<div class="instr" style="margin-top:10px">📍 ' + esc(p.tipo) + (p.consumo ? ' — ' + esc(p.consumo) : '') + '</div>';
-    if (p.taxaServico) html += '<div class="instr">Inclui 🛵 taxa de serviço: R$ ' + p.taxaServico.toFixed(2) + '</div>';
-    html += '<div class="instr" style="margin-top:14px">💰 Total pago: <b style="color:#4caf50">R$ ' + p.total.toFixed(2) + '</b></div>';
+    if (p.tipo) html += '<div class="instr" style="margin-top:10px">' + esc(p.tipo) + (p.consumo ? ' — ' + esc(p.consumo) : '') + '</div>';
+    if (p.taxaServico) html += '<div class="instr">Inclui taxa de serviço: R$ ' + p.taxaServico.toFixed(2) + '</div>';
+    html += '<div class="instr" style="margin-top:14px">Total pago: <b style="color:#4caf50">R$ ' + p.total.toFixed(2) + '</b></div>';
     document.getElementById('prConteudo').innerHTML = html;
   }
 
@@ -1105,14 +1124,14 @@
       var p = pedidos.find(function(x){ return x.id === pid; });
       if (!p) return;
       var st = p.status;
-      var stTxt = { aguardando_pagamento:'⏳ Aguardando pagamento', pago:'💰 Pago', preparando:'👨‍🍳 Preparando', pronto:'✅ Aprovado — solicite o código', solicitado:'🔐 Código solicitado', codigos_enviados:'🔑 Códigos prontos!', entregue:'📦 Entregue' }[st] || st;
+      var stTxt = { aguardando_pagamento:'Aguardando pagamento', pago:'Pago', preparando:'Preparando', pronto:'Aprovado — solicite o código', solicitado:'Código solicitado', codigos_enviados:'Códigos prontos!', entregue:'Entregue' }[st] || st;
       var item = document.createElement('div');
       item.className = 'mp-item';
       item.innerHTML =
         '<div class="det"><b>' + p.itens.map(function(i){ return esc(i.nome) + ' × ' + i.qtd; }).join(', ') + '</b><br>' +
         'R$ ' + p.total.toFixed(2) + ' • ' + esc(p.criadoEm || '') + '</div>' +
         '<span class="st ' + st + '">' + stTxt + '</span>' +
-        (['pronto','solicitado','codigos_enviados'].indexOf(st) >= 0 ? '<button onclick="verPronto(\'' + p.id + '\')">Abrir 📱</button>' : '');
+        (['pronto','solicitado','codigos_enviados'].indexOf(st) >= 0 ? '<button onclick="verPronto(\'' + p.id + '\')">Abrir </button>' : '');
       lista.appendChild(item);
     });
   }
@@ -1161,12 +1180,13 @@
        (572 lojas com dados OFICIAIS do McDonald's BR + extras do OpenStreetMap)
      - Busca local por nome, cidade ou bairro
      - Ordenação por distância (Haversine) com a localização do navegador
-     - Dados © McDonald's Brasil / OpenStreetMap contributors
+     - Dados McDonald's Brasil / OpenStreetMap contributors
      ============================================================ */
   var lojasMcDonalds = [];
   var usuarioCoords = null;        /* [lat, lng] do cliente (geolocalização) */
   var LIMITE_CARTOES = 30;         /* quantos cards mostrar por vez (a busca encontra o resto) */
   var lojaSelecionada = null;
+  var listaAbertaPorGeo = false;   /* lista aberta pelo botão "Perto de mim" (sem digitar) */
 
   /* Fórmula de Haversine: distância em km entre duas coordenadas */
   function calcularDistanciaKm(lat1, lon1, lat2, lon2) {
@@ -1181,19 +1201,49 @@
   }
 
   /* Renderiza os cards de loja: nome, endereço, distância e botão Selecionar.
-     Ordena por distância quando o endereço do cliente é conhecido (usuarioCoords). */
+     A lista fica OCULTA: só aparece enquanto o cliente digita na busca
+     ou quando abre pelo botão "Perto de mim". */
   function renderizarLojas() {
     var box = document.getElementById('listaLojas');
     var contador = document.getElementById('lojasContador');
+    var chip = document.getElementById('lojaSelecionadaBox');
+    var dica = document.getElementById('lojaDica');
     if (!box) return;
 
+    var termo = (document.getElementById('buscaLoja').value || '').trim().toLowerCase();
+    /* se o campo mostra o nome da loja selecionada, não conta como busca */
+    var digitando = termo.length > 0 && !(lojaSelecionada && termo === lojaSelecionada.nome.toLowerCase());
+    var mostrarLista = digitando || (listaAbertaPorGeo && !lojaSelecionada);
+
+    /* Resumo da loja selecionada (chip) */
+    if (lojaSelecionada && !digitando) {
+      chip.innerHTML = '<div class="ls-info"><b>' + esc(lojaSelecionada.nome) + '</b><span>' +
+        esc(lojaSelecionada.endereco || '') + (lojaSelecionada.endereco2 ? ' — ' + esc(lojaSelecionada.endereco2) : '') +
+        '</span></div><button type="button" id="btnTrocarLoja">Trocar</button>';
+      chip.style.display = 'flex';
+      document.getElementById('btnTrocarLoja').addEventListener('click', function() {
+        lojaSelecionada = null;
+        listaAbertaPorGeo = false;
+        document.getElementById('buscaLoja').value = '';
+        document.getElementById('buscaLoja').focus();
+        renderizarLojas();
+      });
+    } else {
+      chip.style.display = 'none';
+      chip.innerHTML = '';
+    }
+
+    /* Lista e contador: somente durante a busca */
+    box.style.display = mostrarLista ? 'block' : 'none';
+    contador.style.display = mostrarLista ? 'block' : 'none';
+    dica.style.display = (!mostrarLista && !lojaSelecionada && lojasMcDonalds.length) ? 'block' : 'none';
+    if (!mostrarLista) { box.innerHTML = ''; contador.textContent = ''; return; }
+
     if (!lojasMcDonalds.length) {
-      box.innerHTML = '<div style="padding:14px; color:#888; font-size:.9rem">📍 Carregando lojas…</div>';
+      box.innerHTML = '<div style="padding:14px; color:#888; font-size:.9rem">Carregando lojas…</div>';
       contador.textContent = '';
       return;
     }
-
-    var termo = (document.getElementById('buscaLoja').value || '').trim().toLowerCase();
 
     var lista = lojasMcDonalds.slice();
     if (usuarioCoords) {
@@ -1212,8 +1262,7 @@
     }
 
     contador.textContent = lista.length + ' loja(s)' + (termo ? ' encontrada(s)' : '') +
-      (lista.length > LIMITE_CARTOES ? ' — mostrando as ' + (usuarioCoords ? 'mais próximas' : 'primeiras') + ' ' + LIMITE_CARTOES + '. Use a busca para achar outra.' : '') +
-      (usuarioCoords ? '' : ' — toque em "📍 Perto de mim" para ordenar pela sua distância');
+      (lista.length > LIMITE_CARTOES ? ' — mostrando as ' + (usuarioCoords ? 'mais próximas' : 'primeiras') + ' ' + LIMITE_CARTOES + '. Refine a busca para achar outra.' : '');
 
     var mostradas = lista.slice(0, LIMITE_CARTOES);
     if (!mostradas.length) {
@@ -1228,10 +1277,10 @@
       var sel = lojaSelecionada && lojaSelecionada.id === l.id;
       html += '<div class="loja-card' + (sel ? ' sel' : '') + '">' +
         '<div class="loja-info">' +
-          '<div class="loja-nome">' + (l.drive ? '🚗 ' : '') + esc(l.nome) + '</div>' +
+          '<div class="loja-nome">' + (l.drive ? '' : '') + esc(l.nome) + '</div>' +
           '<div class="loja-end">' + esc(l.endereco || '') + '</div>' +
           (l.endereco2 ? '<div class="loja-end">' + esc(l.endereco2) + '</div>' : '') +
-          (distTxt ? '<div class="loja-dist">📍 a ' + distTxt + '</div>' : '') +
+          (distTxt ? '<div class="loja-dist">a ' + distTxt + '</div>' : '') +
         '</div>' +
         '<button type="button" class="loja-btn' + (sel ? ' sel' : '') + '" data-id="' + l.id + '">' + (sel ? '✓ Selecionada' : 'Selecionar') + '</button>' +
       '</div>';
@@ -1246,11 +1295,12 @@
 
   function selecionarLoja(id) {
     lojaSelecionada = lojasMcDonalds.find(function(l){ return l.id === id; }) || null;
+    listaAbertaPorGeo = false;
     if (lojaSelecionada) {
-      /* O campo de busca passa a exibir o nome da loja selecionada
-         (limpe o campo para ver a lista completa de novo) */
+      /* O campo passa a exibir o nome da loja selecionada (chip abaixo);
+         toque em "Trocar" para escolher outra */
       document.getElementById('buscaLoja').value = lojaSelecionada.nome;
-      mostrarMensagem('✅ Loja selecionada: ' + lojaSelecionada.nome, 'ok');
+      mostrarMensagem('Loja selecionada: ' + lojaSelecionada.nome, 'ok');
     }
     renderizarLojas();
   }
@@ -1276,16 +1326,17 @@
   /* Ordena as lojas pela localização do navegador (opcional) */
   document.getElementById('btnGeo').addEventListener('click', function() {
     var btn = this;
-    if (!navigator.geolocation) { mostrarMensagem('⚠ Seu navegador não suporta localização.', 'erro'); return; }
-    btn.textContent = '⏳ Localizando…';
+    if (!navigator.geolocation) { mostrarMensagem('Seu navegador não suporta localização.', 'erro'); return; }
+    btn.textContent = 'Localizando…';
     navigator.geolocation.getCurrentPosition(function(pos) {
       usuarioCoords = [pos.coords.latitude, pos.coords.longitude];
-      btn.textContent = '📍 Perto de mim';
+      listaAbertaPorGeo = true;   /* abre a lista com as mais próximas, mesmo sem digitar */
+      btn.textContent = 'Perto de mim';
       renderizarLojas();
-      mostrarMensagem('✅ Lojas ordenadas pela sua localização!', 'ok');
+      mostrarMensagem('Lojas ordenadas pela sua localização!', 'ok');
     }, function() {
-      btn.textContent = '📍 Perto de mim';
-      mostrarMensagem('⚠ Não foi possível obter sua localização. Use a busca pelo nome/cidade.', 'erro');
+      btn.textContent = 'Perto de mim';
+      mostrarMensagem('Não foi possível obter sua localização. Use a busca pelo nome/cidade.', 'erro');
     }, { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 });
   });
 
@@ -1347,7 +1398,7 @@
     var dots = '';
     for (var d = 0; d < paginas.length; d++) dots += '<span class="' + (d === guiaPagina ? 'on' : '') + '">●</span>';
     document.getElementById('guiaDots').innerHTML = dots;
-    document.getElementById('guiaAvancar').textContent = (guiaPagina === paginas.length - 1) ? 'Entendi, vamos lá! 🍔' : 'Próximo →';
+    document.getElementById('guiaAvancar').textContent = (guiaPagina === paginas.length - 1) ? 'Entendi, vamos lá! ' : 'Próximo →';
     document.getElementById('guiaVoltar').style.visibility = (guiaPagina === 0) ? 'hidden' : 'visible';
     document.getElementById('modalGuia').scrollTop = 0;
   }
@@ -1393,7 +1444,7 @@
     var atual = promoEscolha[pid] || 0;
     var novo = atual + delta;
     if (novo < 0) return;
-    if (delta > 0 && total + 1 > promoItemAtual.promo.total) { mostrarMensagem('⚠ Já escolheu ' + promoItemAtual.promo.total + ' lanches!', 'erro'); return; }
+    if (delta > 0 && total + 1 > promoItemAtual.promo.total) { mostrarMensagem('Já escolheu ' + promoItemAtual.promo.total + ' lanches!', 'erro'); return; }
     promoEscolha[pid] = novo;
     document.getElementById('promoqtd_' + pid).textContent = novo;
     atualizarPromoContador();
@@ -1402,7 +1453,7 @@
     var total = 0;
     for (var k in promoEscolha) total += promoEscolha[k];
     var meta = promoItemAtual.promo.total;
-    document.getElementById('promoContador').textContent = total + '/' + meta + ' escolhidos' + (total === meta ? ' ✅' : '');
+    document.getElementById('promoContador').textContent = total + '/' + meta + ' escolhidos' + (total === meta ? ' ' : '');
     var btn = document.getElementById('promoBtn');
     btn.disabled = total !== meta;
   }
@@ -1417,7 +1468,7 @@
     carrinho[key] = 1;
     fecharPromoModal();
     atualizarCarrinho();
-    mostrarMensagem('✅ Promo adicionada ao carrinho! R$ ' + promoItemAtual.preco_real.toFixed(2), 'ok');
+    mostrarMensagem('Promo adicionada ao carrinho! R$ ' + promoItemAtual.preco_real.toFixed(2), 'ok');
   }
 
   /* ---------- Inicialização ---------- */
@@ -1436,60 +1487,60 @@
     <div id="guiaConteudo">
 
       <div class="guia-pagina ativa">
-        <h3>🎉 Bem-vindo ao ZYON!</h3>
-        <p class="guia-txt">Aqui você pede lanches <b>McDonald's</b> com desconto, paga por <b>Pix</b> e retira na loja com o código do app oficial. Vou te guiar em 4 passos rápidos. 👇</p>
+        <h3>Bem-vindo ao ZYON!</h3>
+        <p class="guia-txt">Aqui você pede lanches <b>McDonald's</b> com desconto, paga por <b>Pix</b> e retira na loja com o código do app oficial. Vou te guiar em 4 passos rápidos. </p>
         <div class="guia-promo">
-          <b>🔥 Promo de boas-vindas: 10 lanches por R$ 34,90</b>
+          <b>Promo de boas-vindas: 10 lanches por R$ 34,90</b>
           <img src="img/promo_10_lanches.jpg" alt="Cheeseburger e Chicken Jr. da promoção">
-          <p>Escolha 10 lanches entre <b>Cheeseburger</b> e <b>Chicken Jr.</b> • 🛵 somente retirada</p>
+          <p>Escolha 10 lanches entre <b>Cheeseburger</b> e <b>Chicken Jr.</b> • somente retirada</p>
         </div>
       </div>
 
       <div class="guia-pagina">
-        <h3>🏪 Passo 1: escolha o seu Méqui</h3>
+        <h3>Passo 1: escolha o seu Méqui</h3>
         <div class="guia-mock">
-          <div class="mk-top">🏪 Encontre o seu Méqui</div>
-          <div class="mk-search">🔎 Buscar por nome, cidade ou bairro…</div>
+          <div class="mk-top">Restaurante de retirada (McDonald's)</div>
+          <div class="mk-search">Buscar por nome, cidade ou bairro…</div>
           <div class="mk-linha"><b>McDonald's TIA — DRIVE COTIA</b><br>Rod. Engenheiro …, Cotia — SP<br><span class="mk-ok">✓ Selecionada</span></div>
-          <div class="mk-linha"><b>McDonald's Shopping Generic</b><br>Av. …, Cotia — SP<br>📍 a 2,1 km</div>
+          <div class="mk-linha"><b>McDonald's Shopping Generic</b><br>Av. …, Cotia — SP<br>a 2,1 km</div>
         </div>
-        <p class="guia-txt">Toque em <b>📍 Perto de mim</b> para ordenar as lojas por distância e em <b>Selecionar</b> na loja onde vai retirar. <b>Sem loja selecionada, não dá para finalizar o pedido!</b></p>
+        <p class="guia-txt">Comece a <b>digitar</b> na busca para ver as lojas (ou toque em <b>Perto de mim</b> para ordenar por distância) e toque em <b>Selecionar</b> na loja onde vai retirar. <b>Sem loja selecionada, não dá para finalizar o pedido!</b></p>
       </div>
 
       <div class="guia-pagina">
-        <h3>🛒 Passo 2: monte o carrinho</h3>
+        <h3>Passo 2: monte o carrinho</h3>
         <div class="guia-mock">
-          <div class="mk-top">🍔 Cardápio</div>
-          <div class="mk-linha"><b>🔥 Promo: 10 lanches por R$ 34,90</b><br><span style="color:#ffb400; font-weight:700">🛵 Somente retirada</span><div class="mk-btn" style="width:130px; margin:8px 0 0 auto">🔥 Escolher 10</div></div>
+          <div class="mk-top">Cardápio</div>
+          <div class="mk-linha"><b>Promo: 10 lanches por R$ 34,90</b><br><span style="color:#ffb400; font-weight:700">Somente retirada</span><div class="mk-btn" style="width:130px; margin:8px 0 0 auto">Escolher 10</div></div>
           <div class="mk-linha"><b>Cheeseburger</b> — R$ 6,90<div class="mk-btn" style="width:110px; margin:8px 0 0 auto">+ Adicionar</div></div>
-          <div class="mk-btn" style="border-radius:14px; margin-top:10px">🛒 Ver carrinho • 3 itens • R$ 41,80</div>
+          <div class="mk-btn" style="border-radius:14px; margin-top:10px">Ver carrinho • 3 itens • R$ 41,80</div>
         </div>
-        <p class="guia-txt">Na aba <b>🔥 Promoções</b>, o botão <b>Escolher 10</b> abre a tela onde você divide os 10 lanches. Adicione também lanches avulsos do cardápio, se quiser!</p>
+        <p class="guia-txt">Na aba <b>Promoções</b>, o botão <b>Escolher 10</b> abre a tela onde você divide os 10 lanches. Adicione também lanches avulsos do cardápio, se quiser!</p>
       </div>
 
       <div class="guia-pagina">
-        <h3>💳 Passo 3: pague com Pix</h3>
+        <h3>Passo 3: pague com Pix</h3>
         <div class="guia-mock">
-          <div class="mk-top">💳 Pagamento — Total: <b style="color:#4caf50">R$ 34,90</b></div>
+          <div class="mk-top">Pagamento — Total: <b style="color:#4caf50">R$ 34,90</b></div>
           <div style="text-align:center; background:#fff; border-radius:10px; padding:10px; margin:8px 0">
             <img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&amp;margin=1&amp;data=ZYON-DEMO-GUIA" alt="Exemplo de QR Code Pix" style="width:140px; height:140px; display:block; margin:0 auto">
           </div>
-          <div class="mk-btn">📋 Copiar código Pix</div>
-          <div class="mk-linha" style="text-align:center">⏳ Aguardando pagamento…</div>
-          <div class="mk-linha" style="text-align:center"><span class="mk-ok">✅ Pagamento aprovado!</span></div>
+          <div class="mk-btn">Copiar código Pix</div>
+          <div class="mk-linha" style="text-align:center">Aguardando pagamento…</div>
+          <div class="mk-linha" style="text-align:center"><span class="mk-ok">Pagamento aprovado!</span></div>
         </div>
         <p class="guia-txt">O QR Code é gerado na hora e a confirmação é <b>automática</b> — assim que o Pix cai, seu pedido é aprovado na hora, sem esperar ninguém confirmar.</p>
       </div>
 
       <div class="guia-pagina">
-        <h3>🔑 Passo 4: pegue os códigos e retire</h3>
+        <h3>Passo 4: pegue os códigos e retire</h3>
         <div class="guia-mock">
-          <div class="mk-top"><span class="mk-ok">✅ Pedido aprovado!</span></div>
-          <div class="mk-cod">🔑 Código 1: ABC123</div>
-          <div class="mk-cod">🔑 Código 2: XYZ789</div>
-          <div class="mk-linha">Informe os códigos no <b>caixa</b> ou no <b>drive</b> da loja que você selecionou e retire seus lanches! 🍟</div>
+          <div class="mk-top"><span class="mk-ok">Pedido aprovado!</span></div>
+          <div class="mk-cod">Código 1: ABC123</div>
+          <div class="mk-cod">Código 2: XYZ789</div>
+          <div class="mk-linha">Informe os códigos no <b>caixa</b> ou no <b>drive</b> da loja que você selecionou e retire seus lanches! </div>
         </div>
-        <p class="guia-txt">Quando o pedido estiver pronto, nossa equipe envia os <b>códigos do app oficial</b> (e os prints) direto na tela — sem precisar recarregar a página. É só informar no Méqui e bom apetite! 🎉</p>
+        <p class="guia-txt">Quando o pedido estiver pronto, nossa equipe envia os <b>códigos do app oficial</b> (e os prints) direto na tela — sem precisar recarregar a página. É só informar no Méqui e bom apetite! </p>
       </div>
 
     </div>
@@ -1503,11 +1554,11 @@
   <!-- ================= MODAL: ESCOLHER OS 10 LANCHES DA PROMO ================= -->
   <div class="modal-fundo" id="fundoPromo" onclick="fecharPromoModal()"></div>
   <div class="modal" id="modalPromo">
-    <h3 id="promoTitulo">🔥 Promo 10 lanches</h3>
+    <h3 id="promoTitulo">Promo 10 lanches</h3>
     <div id="promoItens"></div>
     <div class="promo-contador" id="promoContador">0/10 escolhidos</div>
     <button class="promo-confirmar" id="promoBtn" onclick="confirmarPromo()" disabled>Adicionar ao carrinho — R$ 34,90</button>
-    <div class="promo-aviso">🛵 Somente retirada • escolha 10 lanches entre os disponíveis da promoção</div>
+    <div class="promo-aviso">Somente retirada • escolha 10 lanches entre os disponíveis da promoção</div>
     <button class="fechar-modal" onclick="fecharPromoModal()">Cancelar</button>
   </div>
 </body>
