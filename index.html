@@ -213,6 +213,25 @@
   .guia-promo { margin-top:16px; background:#33260a; border:1px solid #ffb400; border-radius:12px; padding:14px; }
   .guia-promo b { color:#ffb400; }
   .guia-promo p { color:#eee; font-size:.9rem; margin:6px 0 0; }
+  .guia-promo img { width:100%; border-radius:10px; display:block; margin-top:8px; }
+
+  /* Guia paginado (wizard) + mockups das telas em CSS puro */
+  .guia-pagina { display:none; }
+  .guia-pagina.ativa { display:block; }
+  .guia-dots { text-align:center; margin-top:12px; color:#3a3a4a; font-size:.7rem; letter-spacing:5px; }
+  .guia-dots .on { color:#ffb400; }
+  .guia-nav { display:flex; gap:10px; margin-top:10px; }
+  .guia-nav .fechar-modal { margin-top:0; flex:1; }
+  .guia-nav #guiaVoltar { background:#12121a; color:#bbb; }
+  .guia-nav #guiaAvancar { background:linear-gradient(90deg,#ff5f00,#ffb400); color:#fff; }
+  .guia-mock { background:#12121a; border:1px solid #2c2c3a; border-radius:14px; padding:12px; margin:12px 0; }
+  .guia-mock .mk-top { color:#fff; font-weight:800; font-size:.85rem; margin-bottom:6px; }
+  .mk-linha { background:#1e1e2a; border:1px solid #2c2c3a; border-radius:10px; padding:9px 11px; margin:7px 0; font-size:.78rem; color:#ccc; line-height:1.45; }
+  .mk-linha b { color:#fff; }
+  .mk-search { background:#1e1e2a; border:1px solid #3a3a4a; border-radius:10px; padding:8px 12px; color:#777; font-size:.78rem; margin-bottom:8px; }
+  .mk-btn { background:linear-gradient(90deg,#ff5f00,#ffb400); color:#fff; border-radius:10px; padding:9px; text-align:center; font-size:.8rem; font-weight:800; margin-top:8px; }
+  .mk-ok { color:#4caf50; font-weight:800; }
+  .mk-cod { background:#12121a; border:2px solid #ffb400; border-radius:10px; padding:10px; margin:8px 0; color:#ffb400; font-weight:800; text-align:center; font-size:.85rem; }
 
   /* Modal da promoção: steppers */
   .promo-item { display:flex; align-items:center; gap:10px; background:#12121a; border:1px solid #2c2c3a;
@@ -1301,16 +1320,36 @@
   }
 
   /* ============================================================
-     GUIA "COMO FUNCIONA" — abre sozinho na 1ª visita do cliente
+     GUIA "COMO FUNCIONA" — paginado, abre TODA VEZ que entra no site
      ============================================================ */
+  var guiaPagina = 0;
   function abrirGuia() {
+    guiaPagina = 0;
     document.getElementById('fundoGuia').style.display = 'block';
     document.getElementById('modalGuia').style.display = 'block';
-    localStorage.setItem('zyon_guia_visto', '1');
+    renderGuia();
   }
   function fecharGuia() {
     document.getElementById('fundoGuia').style.display = 'none';
     document.getElementById('modalGuia').style.display = 'none';
+  }
+  function guiaIr(delta) {
+    var paginas = document.querySelectorAll('#guiaConteudo .guia-pagina');
+    var nova = guiaPagina + delta;
+    if (nova < 0) return;
+    if (nova >= paginas.length) { fecharGuia(); return; }   /* última página fecha */
+    guiaPagina = nova;
+    renderGuia();
+  }
+  function renderGuia() {
+    var paginas = document.querySelectorAll('#guiaConteudo .guia-pagina');
+    for (var i = 0; i < paginas.length; i++) paginas[i].classList.toggle('ativa', i === guiaPagina);
+    var dots = '';
+    for (var d = 0; d < paginas.length; d++) dots += '<span class="' + (d === guiaPagina ? 'on' : '') + '">●</span>';
+    document.getElementById('guiaDots').innerHTML = dots;
+    document.getElementById('guiaAvancar').textContent = (guiaPagina === paginas.length - 1) ? 'Entendi, vamos lá! 🍔' : 'Próximo →';
+    document.getElementById('guiaVoltar').style.visibility = (guiaPagina === 0) ? 'hidden' : 'visible';
+    document.getElementById('modalGuia').scrollTop = 0;
   }
 
   /* ============================================================
@@ -1386,25 +1425,79 @@
   renderizarMeusPedidos();
   carregarDadosServidor();
   carregarLojas();
+  abrirGuia();   /* guia "Como funciona" abre sempre que o cliente entra no site */
 </script>
   <button id="btnCarrinhoFlutuante" onclick="toggleCarrinho()"></button>
   <div id="fundoCarrinho" onclick="toggleCarrinho()"></div>
 
-  <!-- ================= GUIA: COMO FUNCIONA ================= -->
+  <!-- ================= GUIA: COMO FUNCIONA (paginado) ================= -->
   <div class="modal-fundo" id="fundoGuia" onclick="fecharGuia()"></div>
   <div class="modal" id="modalGuia">
-    <h3>❓ Como funciona o ZYON</h3>
-    <div class="guia-passo"><div class="guia-num">1</div><div class="guia-txt"><b>Escolha o Méqui:</b> em "Encontre o seu Méqui", busque e selecione a loja McDonald's onde você vai retirar o pedido.</div></div>
-    <div class="guia-passo"><div class="guia-num">2</div><div class="guia-txt"><b>Monte o carrinho:</b> adicione os lanches do cardápio. Novos clientes têm a <b>promo de 10 lanches por R$ 34,90</b> na aba 🔥 Promoções!</div></div>
-    <div class="guia-passo"><div class="guia-num">3</div><div class="guia-txt"><b>Finalize e pague com Pix:</b> o QR Code é gerado na hora e a confirmação é automática quando o pagamento cai.</div></div>
-    <div class="guia-passo"><div class="guia-num">4</div><div class="guia-txt"><b>Aguarde a aprovação:</b> você acompanha o status do pedido em "Meus pedidos" e na tela de aguardando — sem precisar recarregar.</div></div>
-    <div class="guia-passo"><div class="guia-num">5</div><div class="guia-txt"><b>Solicite os códigos:</b> quando o pedido ficar pronto, toque em "SOLICITAR CÓDIGO". Nossa equipe compra os lanches no app oficial da McDonald's e envia os códigos para você.</div></div>
-    <div class="guia-passo"><div class="guia-num">6</div><div class="guia-txt"><b>Retire na loja:</b> informe os códigos no caixa ou no drive da loja escolhida e pronto — seu lanche está garantido com desconto! 🎉</div></div>
-    <div class="guia-promo">
-      <b>🔥 Promoção de novos clientes: 10 por R$ 34,90</b>
-      <p>Escolha 10 lanches entre <b>Cheeseburger</b> e <b>Chicken Jr.</b> por apenas R$ 34,90 — 🛵 somente retirada. Está na aba <b>🔥 Promoções</b> do cardápio!</p>
+    <div id="guiaConteudo">
+
+      <div class="guia-pagina ativa">
+        <h3>🎉 Bem-vindo ao ZYON!</h3>
+        <p class="guia-txt">Aqui você pede lanches <b>McDonald's</b> com desconto, paga por <b>Pix</b> e retira na loja com o código do app oficial. Vou te guiar em 4 passos rápidos. 👇</p>
+        <div class="guia-promo">
+          <b>🔥 Promo de boas-vindas: 10 lanches por R$ 34,90</b>
+          <img src="img/promo_10_lanches.jpg" alt="Cheeseburger e Chicken Jr. da promoção">
+          <p>Escolha 10 lanches entre <b>Cheeseburger</b> e <b>Chicken Jr.</b> • 🛵 somente retirada</p>
+        </div>
+      </div>
+
+      <div class="guia-pagina">
+        <h3>🏪 Passo 1: escolha o seu Méqui</h3>
+        <div class="guia-mock">
+          <div class="mk-top">🏪 Encontre o seu Méqui</div>
+          <div class="mk-search">🔎 Buscar por nome, cidade ou bairro…</div>
+          <div class="mk-linha"><b>McDonald's TIA — DRIVE COTIA</b><br>Rod. Engenheiro …, Cotia — SP<br><span class="mk-ok">✓ Selecionada</span></div>
+          <div class="mk-linha"><b>McDonald's Shopping Generic</b><br>Av. …, Cotia — SP<br>📍 a 2,1 km</div>
+        </div>
+        <p class="guia-txt">Toque em <b>📍 Perto de mim</b> para ordenar as lojas por distância e em <b>Selecionar</b> na loja onde vai retirar. <b>Sem loja selecionada, não dá para finalizar o pedido!</b></p>
+      </div>
+
+      <div class="guia-pagina">
+        <h3>🛒 Passo 2: monte o carrinho</h3>
+        <div class="guia-mock">
+          <div class="mk-top">🍔 Cardápio</div>
+          <div class="mk-linha"><b>🔥 Promo: 10 lanches por R$ 34,90</b><br><span style="color:#ffb400; font-weight:700">🛵 Somente retirada</span><div class="mk-btn" style="width:130px; margin:8px 0 0 auto">🔥 Escolher 10</div></div>
+          <div class="mk-linha"><b>Cheeseburger</b> — R$ 6,90<div class="mk-btn" style="width:110px; margin:8px 0 0 auto">+ Adicionar</div></div>
+          <div class="mk-btn" style="border-radius:14px; margin-top:10px">🛒 Ver carrinho • 3 itens • R$ 41,80</div>
+        </div>
+        <p class="guia-txt">Na aba <b>🔥 Promoções</b>, o botão <b>Escolher 10</b> abre a tela onde você divide os 10 lanches. Adicione também lanches avulsos do cardápio, se quiser!</p>
+      </div>
+
+      <div class="guia-pagina">
+        <h3>💳 Passo 3: pague com Pix</h3>
+        <div class="guia-mock">
+          <div class="mk-top">💳 Pagamento — Total: <b style="color:#4caf50">R$ 34,90</b></div>
+          <div style="text-align:center; background:#fff; border-radius:10px; padding:10px; margin:8px 0">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&amp;margin=1&amp;data=ZYON-DEMO-GUIA" alt="Exemplo de QR Code Pix" style="width:140px; height:140px; display:block; margin:0 auto">
+          </div>
+          <div class="mk-btn">📋 Copiar código Pix</div>
+          <div class="mk-linha" style="text-align:center">⏳ Aguardando pagamento…</div>
+          <div class="mk-linha" style="text-align:center"><span class="mk-ok">✅ Pagamento aprovado!</span></div>
+        </div>
+        <p class="guia-txt">O QR Code é gerado na hora e a confirmação é <b>automática</b> — assim que o Pix cai, seu pedido é aprovado na hora, sem esperar ninguém confirmar.</p>
+      </div>
+
+      <div class="guia-pagina">
+        <h3>🔑 Passo 4: pegue os códigos e retire</h3>
+        <div class="guia-mock">
+          <div class="mk-top"><span class="mk-ok">✅ Pedido aprovado!</span></div>
+          <div class="mk-cod">🔑 Código 1: ABC123</div>
+          <div class="mk-cod">🔑 Código 2: XYZ789</div>
+          <div class="mk-linha">Informe os códigos no <b>caixa</b> ou no <b>drive</b> da loja que você selecionou e retire seus lanches! 🍟</div>
+        </div>
+        <p class="guia-txt">Quando o pedido estiver pronto, nossa equipe envia os <b>códigos do app oficial</b> (e os prints) direto na tela — sem precisar recarregar a página. É só informar no Méqui e bom apetite! 🎉</p>
+      </div>
+
     </div>
-    <button class="fechar-modal" onclick="fecharGuia()">Entendi, vamos lá! 🍔</button>
+    <div class="guia-dots" id="guiaDots"></div>
+    <div class="guia-nav">
+      <button class="fechar-modal" id="guiaVoltar" onclick="guiaIr(-1)">← Voltar</button>
+      <button class="fechar-modal" id="guiaAvancar" onclick="guiaIr(1)">Próximo →</button>
+    </div>
   </div>
 
   <!-- ================= MODAL: ESCOLHER OS 10 LANCHES DA PROMO ================= -->
