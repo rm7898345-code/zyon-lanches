@@ -13,9 +13,25 @@
 <style>
   * { margin:0; padding:0; box-sizing:border-box; font-family:'Inter','Segoe UI',system-ui,Arial,sans-serif; }
   body { background:#F7F7F5; color:#292929; min-height:100vh; padding-bottom:60px; -webkit-font-smoothing:antialiased; }
-  header { background:#DA291C; padding:26px 20px; text-align:center; }
-  header h1 { color:#fff; letter-spacing:7px; font-size:1.9rem; font-weight:800; text-shadow:0 2px 6px rgba(0,0,0,.25); }
-  header p { color:rgba(255,255,255,.92); font-size:.85rem; margin-top:4px; font-weight:600; }
+  /* ===== Topo (logo + textura + arcos amarelos) ===== */
+  header { position:relative; overflow:hidden; background-color:#DA291C;
+    background-image:radial-gradient(circle, rgba(0,0,0,.055) 1.2px, transparent 1.7px),
+                     radial-gradient(circle, rgba(255,255,255,.05) 1.2px, transparent 1.7px);
+    background-size:18px 18px; background-position:0 0, 9px 9px;
+    padding:14px 20px 36px; box-shadow:0 1px 0 rgba(0,0,0,.06); }
+  header::before { content:''; position:absolute; width:280px; height:280px; border:20px solid rgba(255,199,44,.13);
+    border-radius:50%; right:-80px; top:-150px; }
+  header::after { content:''; position:absolute; width:220px; height:220px; border:16px solid rgba(255,199,44,.09);
+    border-radius:50%; left:-90px; bottom:-40px; }
+  .topo-linha { max-width:1000px; margin:0 auto; display:flex; align-items:center; gap:14px; position:relative; z-index:1; }
+  .topo-logo { width:54px; height:54px; flex-shrink:0; border-radius:16px; box-shadow:0 4px 12px rgba(0,0,0,.28); }
+  .topo-texto { flex:1; min-width:0; }
+  header h1 { color:#fff; letter-spacing:5px; font-size:1.45rem; font-weight:800; text-shadow:0 2px 4px rgba(0,0,0,.25); }
+  .topo-texto p { color:rgba(255,255,255,.85); font-size:.76rem; margin-top:2px; font-weight:600; letter-spacing:.2px; }
+  /* Faixa de arcos amarelos na borda inferior do topo */
+  .topo-arcos { position:absolute; left:0; right:0; bottom:-1px; height:20px; background-color:#FFC72C;
+    background-image:radial-gradient(circle at 50% 100%, #F7F7F5 0 9px, rgba(0,0,0,0) 9.5px);
+    background-size:26px 20px; background-repeat:repeat-x; }
   .container { max-width:1000px; margin:0 auto; padding:20px; }
   .msg { padding:12px 16px; border-radius:10px; margin-bottom:16px; font-weight:600; display:none; border:1px solid transparent; }
   .msg.erro { background:#FDECEA; color:#B3261E; border-color:#F5B9B1; }
@@ -121,7 +137,10 @@
   /* ====== Carrinho como bottom sheet (mobile) ====== */
   @media (max-width: 768px) {
     .container { padding:14px; }
-    header h1 { font-size:1.4rem; }
+    header h1 { font-size:1.2rem; letter-spacing:4px; }
+    .topo-logo { width:46px; height:46px; }
+    .topo-texto p { font-size:.68rem; }
+    header .btn-guia { padding:8px 14px; font-size:.78rem; }
     .dados .campo { min-width:100%; }
     .tabs { overflow-x:auto; flex-wrap:nowrap; padding-bottom:4px; -webkit-overflow-scrolling:touch; }
     .tab { flex-shrink:0; }
@@ -211,9 +230,10 @@
   .mp-item button { background:#FFC72C; color:#292929; border:none; padding:8px 14px; border-radius:8px; font-weight:800; cursor:pointer; }
 
   /* Botão do guia no header */
-  .btn-guia { margin-top:10px; background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.4); color:#fff;
-    padding:9px 22px; border-radius:24px; font-weight:700; font-size:.9rem; cursor:pointer; transition:background .15s; }
-  .btn-guia:hover { background:rgba(255,255,255,.25); }
+  .btn-guia { margin:0; background:#FFC72C; border:none; color:#292929; padding:10px 18px;
+    border-radius:24px; font-weight:800; font-size:.85rem; cursor:pointer; white-space:nowrap;
+    box-shadow:0 3px 8px rgba(0,0,0,.22); transition:transform .1s, background .15s; }
+  .btn-guia:hover { transform:translateY(-1px); background:#E6B32A; }
 
   /* Modais (guia + promoção) */
   .modal-fundo { display:none; position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:1100; }
@@ -274,9 +294,19 @@
 <body>
 
 <header>
-  <h1>ZYON</h1>
-  <p>lanches McDonald's pagos com Pix • retire com o código do app</p>
-  <button class="btn-guia" onclick="abrirGuia()">Como funciona</button>
+  <div class="topo-linha">
+    <svg class="topo-logo" viewBox="0 0 64 64" aria-hidden="true">
+      <rect width="64" height="64" rx="16" fill="#B7001C"/>
+      <path d="M10 46 V32 a11 11 0 0 1 22 0 V46" fill="none" stroke="#FFC72C" stroke-width="8" stroke-linecap="round"/>
+      <path d="M32 46 V32 a11 11 0 0 1 22 0 V46" fill="none" stroke="#FFC72C" stroke-width="8" stroke-linecap="round"/>
+    </svg>
+    <div class="topo-texto">
+      <h1>ZYON</h1>
+      <p>Lanches McDonald's com desconto • Pague no Pix • Retire com o código do app</p>
+    </div>
+    <button class="btn-guia" onclick="abrirGuia()">Como funciona</button>
+  </div>
+  <div class="topo-arcos" aria-hidden="true"></div>
 </header>
 
 <div class="container">
